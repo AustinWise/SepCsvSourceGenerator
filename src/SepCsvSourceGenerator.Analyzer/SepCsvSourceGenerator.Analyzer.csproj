@@ -3,7 +3,6 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-        <IncludeBuildOutput>false</IncludeBuildOutput>
         <Nullable>enable</Nullable>
         <ImplicitUsings>true</ImplicitUsings>
         <LangVersion>13</LangVersion>
@@ -16,14 +15,6 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="$(OutputPath)\$(AssemblyName).dll">
-            <Pack>true</Pack>
-            <PackagePath>analyzers/dotnet/cs</PackagePath>
-            <Visible>false</Visible>
-        </None>
     </ItemGroup>
 
 </Project>
