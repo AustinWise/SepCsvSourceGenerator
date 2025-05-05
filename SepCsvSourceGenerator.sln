@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleCsvCode", "SampleCsvC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SepCsvSourceGenerator", "src\SepCsvSourceGenerator\SepCsvSourceGenerator.csproj", "{8B515E9B-8F09-4E62-B5D3-1E9CF6250846}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{7C69115D-7E2E-41B1-AD2A-1C31A40CBD86}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SepCsvSourceGenerator.Analyzer.Tests", "tests\SepCsvSourceGenerator.Analyzer.Tests\SepCsvSourceGenerator.Analyzer.Tests.csproj", "{88BA3728-12F9-4507-863F-32D9C6702938}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +33,10 @@ Global
 		{8B515E9B-8F09-4E62-B5D3-1E9CF6250846}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B515E9B-8F09-4E62-B5D3-1E9CF6250846}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B515E9B-8F09-4E62-B5D3-1E9CF6250846}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88BA3728-12F9-4507-863F-32D9C6702938}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88BA3728-12F9-4507-863F-32D9C6702938}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88BA3728-12F9-4507-863F-32D9C6702938}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88BA3728-12F9-4507-863F-32D9C6702938}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -37,6 +45,7 @@ Global
 		{7AD4B337-8C5A-4D2A-8BE0-B3178CDD9C04} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{C3837D60-AFE7-4A18-BDA3-33E9CFFDAE90} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{8B515E9B-8F09-4E62-B5D3-1E9CF6250846} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{88BA3728-12F9-4507-863F-32D9C6702938} = {7C69115D-7E2E-41B1-AD2A-1C31A40CBD86}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {07D25C97-2551-4BF9-BA6B-A8BA26CC4DBB}
