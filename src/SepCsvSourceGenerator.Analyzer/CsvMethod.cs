@@ -2,5 +2,6 @@
 
 internal sealed class CsvMethod
 {
-    bool HasCancellationToken { get; set; }
+    public bool HasCancellationToken { get; set; }
+    public bool IncludeFields { get; set; }
 }
