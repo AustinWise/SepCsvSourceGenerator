@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 
@@ -23,7 +24,7 @@ public class CsvGenerator : IIncrementalGenerator
                 transform: static (ctx, _) => GetSemanticTargetForGeneration(ctx))
             .Where(static m => m is not null)!;
 
-        IncrementalValueProvider<(Compilation, IEnumerable<MethodDeclarationSyntax>)> compilationAndMethods =
+        IncrementalValueProvider<(Compilation, ImmutableArray<MethodDeclarationSyntax>)> compilationAndMethods =
             context.CompilationProvider.Combine(methodDeclarations.Collect());
 
         context.RegisterSourceOutput(compilationAndMethods,
@@ -126,11 +127,10 @@ public class CsvGenerator : IIncrementalGenerator
         {
             string paramType = p.Type.ToDisplayString();
             string attrs = p.Type.ToDisplayString() == "System.Threading.CancellationToken" ? "[EnumeratorCancellation] " : "";
-            string defaultValue = p.HasExplicitDefaultValue ? $" = {p.ExplicitDefaultValue ?? "default"}" : "";
-            return $"{attrs}{paramType} {p.Name}{defaultValue}";
+            return $"{attrs}{paramType} {p.Name}";
         }));
 
-        source.AppendLine($"        public async static {methodSymbol.ReturnType.ToDisplayString()} {methodSymbol.Name}({paramsString})");
+        source.AppendLine($"        public async static partial {methodSymbol.ReturnType.ToDisplayString()} {methodSymbol.Name}({paramsString})");
         source.AppendLine("        {");
 
         var membersToMap = GetMappableMembers(classSymbol, includeFields);
@@ -236,7 +236,7 @@ public class CsvGenerator : IIncrementalGenerator
                 OriginalSymbol = memberSymbol,
                 Name = memberSymbol.Name,
                 Type = memberType,
-                IsRequired = memberSymbol.IsRequired,
+                IsRequired = memberSymbol is IPropertySymbol propSym && propSym.IsRequired,
                 CsvHeaderName = csvHeaderName,
                 DateFormat = dateFormat
             });
