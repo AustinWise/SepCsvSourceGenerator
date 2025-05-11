@@ -2,11 +2,8 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Text;
-using System.Xml.Linq;
 
 namespace SepCsvSourceGenerator;
 
@@ -104,8 +101,8 @@ public class CsvGenerator : IIncrementalGenerator
         source.AppendLine("        {");
 
         var membersToMap = GetMappableMembers(classSymbol, includeFields);
-        string cancellationTokenName = methodSymbol.Parameters.FirstOrDefault(p => p.Type.ToDisplayString() == "System.Threading.CancellationToken")?.Name ?? "ct"; // Assume 'ct' if not found, though signature should have it
-        bool hasCancellationToken = methodSymbol.Parameters.Any(p => p.Type.ToDisplayString() == "System.Threading.CancellationToken");
+        string? cancellationTokenName = methodSymbol.Parameters.FirstOrDefault(p => p.Type.ToDisplayString() == "System.Threading.CancellationToken")?.Name;
+        bool hasCancellationToken = cancellationTokenName != null;
 
         foreach (var member in membersToMap)
         {
@@ -223,20 +220,23 @@ public class CsvGenerator : IIncrementalGenerator
         string originalTypeName = typeForSwitch.OriginalDefinition.ToDisplayString();
 
         string parseExpression;
-        if (originalTypeName == "System.DateTime")
+        if (typeForSwitch.OriginalDefinition.SpecialType == SpecialType.System_DateTime)
         {
-            string format = member.DateFormat ?? "MM/dd/yyyy"; // Default format from example
-            parseExpression = $"DateTime.ParseExact({spanAccessor}, \"{format}\", CultureInfo.InvariantCulture)";
+            if (member.DateFormat is string dateFormat)
+            {
+                parseExpression = $"DateTime.ParseExact({spanAccessor}, \"{dateFormat}\", CultureInfo.InvariantCulture)";
+
+            }
+            else
+            {
+                parseExpression = $"DateTime.Parse({spanAccessor}, CultureInfo.InvariantCulture)";
+            }
         }
         else // Includes string, string?, and other types (relying on ToString() then assignment)
         {
             parseExpression = $"{spanAccessor}.ToString()";
         }
 
-        if (type is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsValueType && namedTypeSymbol.NullableAnnotation == NullableAnnotation.Annotated && originalTypeName == "System.DateTime")
-        {
-            return $"({spanAccessor}.IsEmpty ? default({type.ToDisplayString()}) : ({type.ToDisplayString()})({parseExpression}))";
-        }
         return parseExpression;
     }
 
