@@ -49,25 +49,9 @@ partial class MyClass
         }
     }
 
-    // Transaction Date,Post Date,Description,Category,Type,Amount,Memo
-
     [CsvHeaderName("Transaction Date")]
     [CsvDateFormat("MM/dd/yyyy")]
     public required DateTime TransactionDate { get; init; }
-
-
-    //[CsvHeaderName("Post Date")]
-    //public string PostDate { get; init; }
-
-    //public string Description { get; init; }
-
-    //public string Category { get; set; }
-
-    //public string Type { get; set; }
-
-    //public string Amount { get; set; }
-
-    //public string Memo { get; set; }
 
     public string? SomethingElse { get; set; }
 }
