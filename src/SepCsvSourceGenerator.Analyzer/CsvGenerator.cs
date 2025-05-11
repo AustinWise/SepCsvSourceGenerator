@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace SepCsvSourceGenerator;
 
@@ -19,9 +20,9 @@ public class CsvGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         IncrementalValuesProvider<MethodDeclarationSyntax> methodDeclarations = context.SyntaxProvider
-            .CreateSyntaxProvider(
-                predicate: static (s, _) => IsSyntaxTargetForGeneration(s),
-                transform: static (ctx, _) => GetSemanticTargetForGeneration(ctx))
+            .ForAttributeWithMetadataName(GenerateCsvParserAttributeName,
+                predicate: static (s, _) => s is MethodDeclarationSyntax,
+                transform: static (ctx, _) => (MethodDeclarationSyntax)ctx.TargetNode)
             .Where(static m => m is not null)!;
 
         IncrementalValueProvider<(Compilation, ImmutableArray<MethodDeclarationSyntax>)> compilationAndMethods =
@@ -31,39 +32,8 @@ public class CsvGenerator : IIncrementalGenerator
             static (spc, source) => Execute(source.Item1, source.Item2, spc));
     }
 
-    static bool IsSyntaxTargetForGeneration(SyntaxNode node)
+    static void Execute(Compilation compilation, ImmutableArray<MethodDeclarationSyntax> methods, SourceProductionContext context)
     {
-        return node is MethodDeclarationSyntax mds && mds.AttributeLists.Count > 0;
-    }
-
-    static MethodDeclarationSyntax? GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
-    {
-        var methodDeclarationSyntax = (MethodDeclarationSyntax)context.Node;
-
-        foreach (AttributeListSyntax attributeListSyntax in methodDeclarationSyntax.AttributeLists)
-        {
-            foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
-            {
-                if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is IMethodSymbol attributeSymbol)
-                {
-                    string fullName = attributeSymbol.ContainingType.ToDisplayString();
-                    if (fullName == GenerateCsvParserAttributeName)
-                    {
-                        return methodDeclarationSyntax;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    static void Execute(Compilation compilation, IEnumerable<MethodDeclarationSyntax> methods, SourceProductionContext context)
-    {
-        if (!methods.Any())
-        {
-            return;
-        }
-
         foreach (var methodSyntax in methods)
         {
             var semanticModel = compilation.GetSemanticModel(methodSyntax.SyntaxTree);
@@ -200,7 +170,7 @@ public class CsvGenerator : IIncrementalGenerator
         source.AppendLine("            }");
         source.AppendLine("        }");
 
-        source.AppendLine("    }"); 
+        source.AppendLine("    }");
 
         if (!string.IsNullOrEmpty(namespaceName))
         {
