@@ -33,7 +33,6 @@ partial class MyClass
             somethingElseNdx = -1;
         }
 
-        //TODO: in .NET 10 and higher, call WithCancellation on the reader
         await foreach (SepReader.Row row in reader)
         {
             ct.ThrowIfCancellationRequested();
