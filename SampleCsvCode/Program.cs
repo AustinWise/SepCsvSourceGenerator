@@ -13,9 +13,8 @@ await foreach (var my in MyClass.ParseAsync(reader))
 partial class MyClass
 {
     // This is what the user would declare
-    // 
-    // [GenerateCsvParser]
-    //public static partial IAsyncEnumerable<MyClass> ParseAsync(SepReader reader, CancellationToken ct = default);
+    [GenerateCsvParser]
+    public static partial IAsyncEnumerable<MyClass> ParseAsync(SepReader reader, CancellationToken ct = default);
 
     [CsvHeaderName("Transaction Date")]
     [CsvDateFormat("MM/dd/yyyy")]
@@ -25,7 +24,7 @@ partial class MyClass
 
     // This is what the source generator will generator:
 
-    public async static IAsyncEnumerable<MyClass> ParseAsync(SepReader reader, [EnumeratorCancellation] CancellationToken ct = default)
+    public async static partial IAsyncEnumerable<MyClass> ParseAsync(SepReader reader, [EnumeratorCancellation] CancellationToken ct)
     {
         int transactionDateNdx;
         int somethingElseNdx;
