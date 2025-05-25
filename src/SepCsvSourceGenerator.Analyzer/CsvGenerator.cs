@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Text;
 
 namespace SepCsvSourceGenerator;
@@ -44,10 +43,15 @@ public partial class CsvGenerator : IIncrementalGenerator
 
             foreach (var group in methodsByClass)
             {
-                string? sourceText = emitter.Emit(group.Key, group.ToList(), context.CancellationToken);
+                INamedTypeSymbol? key = (INamedTypeSymbol?)group.Key;
+                if (key == null)
+                {
+                    throw new Exception("Grouping symbol is null for some reason?");
+                }
+                string? sourceText = emitter.Emit(key, group.ToList(), context.CancellationToken);
                 if (!string.IsNullOrEmpty(sourceText))
                 {
-                    context.AddSource(Emitter.GetHintName(group.Key), SourceText.From(sourceText, Encoding.UTF8));
+                    context.AddSource(Emitter.GetHintName(key), SourceText.From(sourceText!, Encoding.UTF8));
                 }
             }
         }

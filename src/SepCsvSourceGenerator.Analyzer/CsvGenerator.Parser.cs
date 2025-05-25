@@ -1,11 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Threading;
 
 namespace SepCsvSourceGenerator;
 
@@ -25,7 +21,7 @@ public partial class CsvGenerator
         private readonly INamedTypeSymbol? _cancellationTokenSymbol;
         private readonly INamedTypeSymbol? _dateTimeSymbol;
         private readonly INamedTypeSymbol? _stringSymbol;
-        private readonly INamedTypeSymbol? _requiredMemberAttributeSymbol; // For IsRequiredMember check
+        private readonly INamedTypeSymbol? _nullableSymbol;
 
         public Parser(Compilation compilation, Action<Diagnostic> reportDiagnostic, CancellationToken cancellationToken)
         {
@@ -40,9 +36,9 @@ public partial class CsvGenerator
             _sepReaderSymbol = compilation.GetTypeByMetadataName("nietras.SeparatedValues.SepReader");
             _iAsyncEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IAsyncEnumerable`1");
             _cancellationTokenSymbol = compilation.GetTypeByMetadataName("System.Threading.CancellationToken");
-            _dateTimeSymbol = compilation.GetTypeByMetadataName("System.DateTime");
+            _dateTimeSymbol = compilation.GetSpecialType(SpecialType.System_DateTime);
             _stringSymbol = compilation.GetSpecialType(SpecialType.System_String);
-            _requiredMemberAttributeSymbol = compilation.GetTypeByMetadataName("System.Runtime.CompilerServices.RequiredMemberAttribute");
+            _nullableSymbol = compilation.GetSpecialType(SpecialType.System_Nullable_T);
         }
 
         public List<CsvMethodDefinition> GetCsvMethodDefinitions(ImmutableArray<MethodDeclarationSyntax> methods)
@@ -105,7 +101,7 @@ public partial class CsvGenerator
                     bool isDateTime = SymbolEqualityComparer.Default.Equals(propertySymbol.Type.OriginalDefinition, _dateTimeSymbol) ||
                                       (propertySymbol.Type is INamedTypeSymbol ntsDateTime && ntsDateTime.IsGenericType &&
                                        SymbolEqualityComparer.Default.Equals(ntsDateTime.TypeArguments.FirstOrDefault()?.OriginalDefinition, _dateTimeSymbol) &&
-                                       SymbolEqualityComparer.Default.Equals(ntsDateTime.OriginalDefinition, _compilation.GetTypeByMetadataName("System.Nullable`1")));
+                                       SymbolEqualityComparer.Default.Equals(ntsDateTime.OriginalDefinition, _nullableSymbol));
 
                     if (isDateTime)
                     {
@@ -122,9 +118,11 @@ public partial class CsvGenerator
 
                     bool isRequired = propertySymbol.IsRequired; // For 'required' keyword
 
+                    // TODO: this is checking for both nullable value types and nullable reference types. Ensure this is what we want.
+                    // Or delete if we never end up using it.
                     bool isNullableType = propertySymbol.Type.NullableAnnotation == NullableAnnotation.Annotated ||
                                           (propertySymbol.Type is INamedTypeSymbol nts && nts.IsGenericType &&
-                                           SymbolEqualityComparer.Default.Equals(nts.OriginalDefinition, _compilation.GetTypeByMetadataName("System.Nullable`1")));
+                                           SymbolEqualityComparer.Default.Equals(nts.OriginalDefinition, _nullableSymbol));
 
                     ITypeSymbol underlyingType = (isNullableType && propertySymbol.Type is INamedTypeSymbol ntsNullable && ntsNullable.IsGenericType)
                                                ? ntsNullable.TypeArguments[0]
@@ -200,12 +198,12 @@ public partial class CsvGenerator
     internal static class DiagnosticDescriptors
     {
         public static readonly DiagnosticDescriptor MethodNotPartialStatic =
-            new("CSVGEN001", "Method must be partial and static", "Method '{0}' must be declared as 'partial static'.", "Usage", DiagnosticSeverity.Error, true);
+            new("CSVGEN001", "Method must be partial and static", "Method '{0}' must be declared as 'partial static'", "Usage", DiagnosticSeverity.Error, true);
         public static readonly DiagnosticDescriptor InvalidReturnType =
-            new("CSVGEN002", "Invalid return type", "Method must return 'IAsyncEnumerable<{0}>'.", "Usage", DiagnosticSeverity.Error, true);
+            new("CSVGEN002", "Invalid return type", "Method must return 'IAsyncEnumerable<{0}>'", "Usage", DiagnosticSeverity.Error, true);
         public static readonly DiagnosticDescriptor InvalidMethodParameters =
-            new("CSVGEN003", "Invalid method parameters", "Method must have parameters '(SepReader reader, CancellationToken ct)'.", "Usage", DiagnosticSeverity.Error, true);
+            new("CSVGEN003", "Invalid method parameters", "Method must have parameters '(SepReader reader, CancellationToken ct)'", "Usage", DiagnosticSeverity.Error, true);
         public static readonly DiagnosticDescriptor MissingDateFormatAttribute =
-            new("CSVGEN004", "Missing CsvDateFormat attribute", "Property '{0}' of type DateTime or DateTime? must have a [CsvDateFormat] attribute.", "Usage", DiagnosticSeverity.Error, true);
+            new("CSVGEN004", "Missing CsvDateFormat attribute", "Property '{0}' of type DateTime or DateTime? must have a [CsvDateFormat] attribute", "Usage", DiagnosticSeverity.Error, true);
     }
 }

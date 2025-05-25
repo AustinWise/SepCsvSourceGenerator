@@ -1,10 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading;
 
 namespace SepCsvSourceGenerator;
 
@@ -65,14 +61,14 @@ public partial class CsvGenerator
 
             var classStack = new Stack<INamedTypeSymbol>();
             var currentClass = containingClassSymbol;
-            while(currentClass != null)
+            while (currentClass != null)
             {
                 classStack.Push(currentClass);
                 currentClass = currentClass.ContainingType;
             }
 
             string indent = string.IsNullOrEmpty(namespaceName) ? "" : "    ";
-            while(classStack.Count > 0)
+            while (classStack.Count > 0)
             {
                 var classToDeclare = classStack.Pop();
                 _builder.Append(indent).Append(SyntaxFacts.GetText(classToDeclare.DeclaredAccessibility)).Append(" partial ")
@@ -97,7 +93,7 @@ public partial class CsvGenerator
 
             // Close class and namespace braces
             currentClass = containingClassSymbol;
-             while(currentClass != null)
+            while (currentClass != null)
             {
                 indent = indent.Substring(0, indent.Length - 4);
                 _builder.Append(indent).AppendLine("}");
@@ -117,7 +113,7 @@ public partial class CsvGenerator
             var itemTypeName = methodDef.ItemTypeSymbol.Name; // Assuming no generics on item type for simplicity here
             if (methodDef.ItemTypeSymbol.TypeParameters.Any())
             {
-                 itemTypeName = methodDef.ItemTypeSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+                itemTypeName = methodDef.ItemTypeSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
             }
 
             _builder.Append(baseIndent).AppendLine($"public async static partial global::System.Collections.Generic.IAsyncEnumerable<{itemTypeName}> {methodDef.MethodSymbol.Name}(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)")
@@ -149,7 +145,13 @@ public partial class CsvGenerator
             }
             _builder.AppendLine();
 
-            _builder.Append(indent).AppendLine("await foreach (SepReader.Row row in reader.ConfigureAwait(false))");
+            _builder.Append(indent).AppendLine("await foreach (SepReader.Row row in reader");
+            // The ConfigureAwait only works in .NET 10 and later: https://github.com/dotnet/runtime/issues/112007
+            _builder.Append(indent).AppendLine("#if NET10_0_OR_GREATER");
+            _builder.Append(indent).AppendLine(".WithCancellation(ct).ConfigureAwait(false)");
+            _builder.Append(indent).AppendLine("#endif");
+            _builder.Append(indent).AppendLine(")");
+
             _builder.Append(indent).AppendLine("{");
             string innerIndent = indent + "    ";
             _builder.Append(innerIndent).AppendLine("ct.ThrowIfCancellationRequested();");
