@@ -20,6 +20,17 @@ partial class MyClass
     [CsvDateFormat("MM/dd/yyyy")]
     public required DateTime TransactionDate { get; init; }
 
+    [CsvHeaderName("Amount")]
+    public required int Amount { get; init; }
+
+    [CsvHeaderName("Name")]
+    public required string Name { get; init; }
+
+    // If the column is missing, this property will not be set.
+    [CsvHeaderName("Duration")]
+    public float? Duration { get; set; }
+
+    // Something that is not pared because it does not have a CsvHeaderName attribute.
     public string? SomethingElse { get; set; }
 
     // This is what the source generator will generator:
@@ -27,18 +38,28 @@ partial class MyClass
     public async static partial IAsyncEnumerable<MyClass> ParseAsync(SepReader reader, [EnumeratorCancellation] CancellationToken ct)
     {
         int transactionDateNdx;
-        int somethingElseNdx;
+        int amountNdx;
+        int nameNdx;
+        int durationNdx;
 
         // required member
         if (!reader.Header.TryIndexOf("Transaction Date", out transactionDateNdx))
         {
             throw new ArgumentException("Missing column name 'Transaction Date'");
         }
+        if (!reader.Header.TryIndexOf("Amount", out amountNdx))
+        {
+            throw new ArgumentException("Missing column name 'Amount'");
+        }
+        if (!reader.Header.TryIndexOf("Name", out nameNdx))
+        {
+            throw new ArgumentException("Missing column name 'Name'");
+        }
 
         // not required member
-        if (!reader.Header.TryIndexOf("SomethingElse", out somethingElseNdx))
+        if (!reader.Header.TryIndexOf("Duration", out durationNdx))
         {
-            somethingElseNdx = -1;
+            durationNdx = -1;
         }
 
         await foreach (SepReader.Row row in reader)
@@ -47,11 +68,15 @@ partial class MyClass
 
             MyClass ret = new MyClass()
             {
+                // types that implement ISpanParsable<T> are parsed this way
                 TransactionDate = DateTime.ParseExact(row[transactionDateNdx].Span, "MM/dd/yyyy", CultureInfo.InvariantCulture),
+                Amount = int.Parse(row[amountNdx].Span, CultureInfo.InvariantCulture),
+                // while string implments ISpanParsable<string>, it is special cased to directly call ToString() on the Span.
+                Name = row[nameNdx].Span.ToString(),
             };
-            if (somethingElseNdx != -1)
+            if (durationNdx != -1)
             {
-                ret.SomethingElse = row[somethingElseNdx].Span.ToString();
+                ret.Duration = float.Parse(row[durationNdx].Span, CultureInfo.InvariantCulture);
             }
             yield return ret;
         }
