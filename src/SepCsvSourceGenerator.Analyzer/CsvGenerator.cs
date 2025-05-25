@@ -3,7 +3,7 @@
 namespace SepCsvSourceGenerator;
 
 [Generator]
-public class CsvGenerator : IIncrementalGenerator
+public partial class CsvGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {

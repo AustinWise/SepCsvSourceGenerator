@@ -13,8 +13,8 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
     
     partial class MyClass
     {
-        [GenerateCsvParser]
-        public static partial IAsyncEnumerable<MyClass> ParseAsync(SepReader reader, CancellationToken ct = default);
+        // [GenerateCsvParser]
+        // public static partial IAsyncEnumerable<MyClass> ParseAsync(SepReader reader, CancellationToken ct = default);
 
         [CsvHeaderName("Transaction Date")]
         [CsvDateFormat("MM/dd/yyyy")]
