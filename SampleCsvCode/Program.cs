@@ -68,14 +68,16 @@ partial class MyClass
 
             MyClass ret = new MyClass()
             {
-                // types that implement ISpanParsable<T> are parsed this way
+                // DateTime optionally supports a format string.
                 TransactionDate = DateTime.ParseExact(row[transactionDateNdx].Span, "MM/dd/yyyy", CultureInfo.InvariantCulture),
+                // types that implement ISpanParsable<T> are parsed this way
                 Amount = int.Parse(row[amountNdx].Span, CultureInfo.InvariantCulture),
-                // while string implments ISpanParsable<string>, it is special cased to directly call ToString() on the Span.
+                // while string implements ISpanParsable<string>, it is special cased to directly call ToString() on the Span.
                 Name = row[nameNdx].Span.ToString(),
             };
             if (durationNdx != -1)
             {
+                // types that implement ISpanParsable<T> are parsed this way
                 ret.Duration = float.Parse(row[durationNdx].Span, CultureInfo.InvariantCulture);
             }
             yield return ret;
