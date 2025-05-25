@@ -6,6 +6,4 @@ public sealed class GenerateCsvParserAttribute : CsvAttribute
     public GenerateCsvParserAttribute()
     {
     }
-
-    public bool IncludeFields { get; set; }
 }
