@@ -70,7 +70,8 @@ public partial class CsvGenerator
             _builder.AppendLine();
 
             // Process each row
-            _builder.AppendLine("            await foreach (var row in reader.ConfigureAwait(false))");
+            // TODO: add .ConfigureAwait(false) and .WithCancellation(ct) for .NET 10 and later: https://github.com/dotnet/runtime/issues/112007
+            _builder.AppendLine("            await foreach (var row in reader)");
             _builder.AppendLine("            {");
             _builder.AppendLine("                ct.ThrowIfCancellationRequested();");
             _builder.AppendLine();

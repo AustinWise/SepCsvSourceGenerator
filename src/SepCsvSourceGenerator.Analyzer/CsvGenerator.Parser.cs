@@ -142,7 +142,7 @@ public partial class CsvGenerator
                 properties.Add(new CsvProperty
                 {
                     PropertyName = propertySymbol.Name,
-                    HeaderName = headerName,
+                    HeaderName = headerName!,
                     TypeName = propertySymbol.Type.ToDisplayString(),
                     DateFormat = dateFormat,
                     IsRequired = propertySymbol.IsRequired,
