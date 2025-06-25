@@ -31,7 +31,7 @@ public partial class CsvGenerator
             sb.AppendLine("{");
             sb.AppendLine($"    public partial class {target.TargetType.Name}");
             sb.AppendLine("    {");
-            sb.AppendLine($"        public static async partial System.Collections.Generic.IAsyncEnumerable<{typeName}> {methodName}(nietras.SeparatedValues.SepReader reader, [System.Runtime.CompilerServices.EnumeratorCancellation] System.Threading.CancellationToken ct = default)");
+            sb.AppendLine($"        public static async partial System.Collections.Generic.IAsyncEnumerable<{typeName}> {methodName}(nietras.SeparatedValues.SepReader reader, [System.Runtime.CompilerServices.EnumeratorCancellation] System.Threading.CancellationToken ct)");
             sb.AppendLine("        {");
             // Declare column indices
             foreach (var prop in target.Properties)
