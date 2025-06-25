@@ -91,10 +91,16 @@ public partial class CsvGenerator : IIncrementalGenerator
             var className = classSymbol.Name;
             var ns = classSymbol.ContainingNamespace.IsGlobalNamespace ? "" : $"namespace {classSymbol.ContainingNamespace};\n";
             var methodName = methodSyntax.Identifier.Text;
-            var generated = $@"{ns}
+            var generated = $@"
+using System.Collections.Generic;
+using System.Globalization;
+using System.Runtime.CompilerServices;
+
+{ns}
+
 partial class {className}
 {{
-    public async static partial System.Collections.Generic.IAsyncEnumerable<{className}> {methodName}(nietras.SeparatedValues.SepReader reader, [EnumeratorCancellation] System.Threading.CancellationToken ct)
+    public async static partial IAsyncEnumerable<{className}> {methodName}(nietras.SeparatedValues.SepReader reader, [EnumeratorCancellation] System.Threading.CancellationToken ct)
     {{
 {ndxVars}
 {headerLookups}
