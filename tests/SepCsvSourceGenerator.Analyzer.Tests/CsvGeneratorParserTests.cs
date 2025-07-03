@@ -1,7 +1,6 @@
-using System.Reflection;
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using nietras.SeparatedValues;
+using System.Collections.Immutable;
 
 namespace SepCsvSourceGenerator.Analyzer.Tests
 {
