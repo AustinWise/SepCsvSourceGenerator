@@ -1,12 +1,7 @@
 ﻿namespace SepCsvSourceGenerator;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-public sealed class CsvDateFormatAttribute : CsvAttribute
+public sealed class CsvDateFormatAttribute(string format) : CsvAttribute
 {
-    public CsvDateFormatAttribute(string format)
-    {
-        Format = format;
-    }
-
-    public string Format { get; }
+    public string Format { get; } = format;
 }

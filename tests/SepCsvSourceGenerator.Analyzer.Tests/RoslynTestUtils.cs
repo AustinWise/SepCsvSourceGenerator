@@ -31,7 +31,7 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
 
         public static (Compilation, ImmutableArray<Diagnostic>) RunGenerator(Compilation compilation, IIncrementalGenerator generator, CancellationToken cancellationToken)
         {
-            var driver = CSharpGeneratorDriver.Create(new[] { generator.AsSourceGenerator() }, Enumerable.Empty<AdditionalText>(), (CSharpParseOptions)compilation.SyntaxTrees.First().Options);
+            var driver = CSharpGeneratorDriver.Create([generator.AsSourceGenerator()], [], (CSharpParseOptions)compilation.SyntaxTrees.First().Options);
             driver.RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out var diagnostics, cancellationToken);
             return (outputCompilation, diagnostics);
         }
@@ -44,7 +44,7 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
         {
             var syntaxTrees = sources.Select(s => CSharpSyntaxTree.ParseText(s, new CSharpParseOptions(languageVersion)));
 
-            List<MetadataReference> references = new();
+            List<MetadataReference> references = [];
             if (includeBaseReferences)
             {
                 references.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));

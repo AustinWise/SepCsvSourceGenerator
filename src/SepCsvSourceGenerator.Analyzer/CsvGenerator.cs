@@ -43,12 +43,8 @@ public partial class CsvGenerator : IIncrementalGenerator
 
             foreach (var group in methodsByClass)
             {
-                INamedTypeSymbol? key = (INamedTypeSymbol?)group.Key;
-                if (key == null)
-                {
-                    throw new Exception("Grouping symbol is null for some reason?");
-                }
-                string? sourceText = emitter.Emit(key, group.ToList(), context.CancellationToken);
+                INamedTypeSymbol? key = (INamedTypeSymbol?)group.Key ?? throw new Exception("Grouping symbol is null for some reason?");
+                string? sourceText = emitter.Emit(key, [.. group], context.CancellationToken);
                 if (!string.IsNullOrEmpty(sourceText))
                 {
                     context.AddSource(Emitter.GetHintName(key), SourceText.From(sourceText!, Encoding.UTF8));

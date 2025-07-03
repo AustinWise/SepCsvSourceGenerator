@@ -7,39 +7,21 @@ namespace SepCsvSourceGenerator;
 
 public partial class CsvGenerator
 {
-    internal sealed class Parser
+    internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportDiagnostic, CancellationToken cancellationToken)
     {
-        private readonly Compilation _compilation;
-        private readonly Action<Diagnostic> _reportDiagnostic;
-        private readonly CancellationToken _cancellationToken;
+        private readonly Compilation _compilation = compilation;
+        private readonly Action<Diagnostic> _reportDiagnostic = reportDiagnostic;
+        private readonly CancellationToken _cancellationToken = cancellationToken;
 
-        private readonly INamedTypeSymbol? _generateCsvParserAttributeSymbol;
-        private readonly INamedTypeSymbol? _csvHeaderNameAttributeSymbol;
-        private readonly INamedTypeSymbol? _csvDateFormatAttributeSymbol;
-        private readonly INamedTypeSymbol? _sepReaderSymbol;
-        private readonly INamedTypeSymbol? _iAsyncEnumerableSymbol;
-        private readonly INamedTypeSymbol? _cancellationTokenSymbol;
-        private readonly INamedTypeSymbol? _dateTimeSymbol;
-        private readonly INamedTypeSymbol? _stringSymbol;
-        private readonly INamedTypeSymbol? _nullableSymbol;
-
-        public Parser(Compilation compilation, Action<Diagnostic> reportDiagnostic, CancellationToken cancellationToken)
-        {
-            _compilation = compilation;
-            _reportDiagnostic = reportDiagnostic;
-            _cancellationToken = cancellationToken;
-
-            _generateCsvParserAttributeSymbol = compilation.GetTypeByMetadataName(GenerateCsvParserAttributeFullName);
-            _csvHeaderNameAttributeSymbol = compilation.GetTypeByMetadataName("SepCsvSourceGenerator.CsvHeaderNameAttribute");
-            _csvDateFormatAttributeSymbol = compilation.GetTypeByMetadataName("SepCsvSourceGenerator.CsvDateFormatAttribute");
-
-            _sepReaderSymbol = compilation.GetTypeByMetadataName("nietras.SeparatedValues.SepReader");
-            _iAsyncEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IAsyncEnumerable`1");
-            _cancellationTokenSymbol = compilation.GetTypeByMetadataName("System.Threading.CancellationToken");
-            _dateTimeSymbol = compilation.GetSpecialType(SpecialType.System_DateTime);
-            _stringSymbol = compilation.GetSpecialType(SpecialType.System_String);
-            _nullableSymbol = compilation.GetSpecialType(SpecialType.System_Nullable_T);
-        }
+        private readonly INamedTypeSymbol? _generateCsvParserAttributeSymbol = compilation.GetTypeByMetadataName(GenerateCsvParserAttributeFullName);
+        private readonly INamedTypeSymbol? _csvHeaderNameAttributeSymbol = compilation.GetTypeByMetadataName("SepCsvSourceGenerator.CsvHeaderNameAttribute");
+        private readonly INamedTypeSymbol? _csvDateFormatAttributeSymbol = compilation.GetTypeByMetadataName("SepCsvSourceGenerator.CsvDateFormatAttribute");
+        private readonly INamedTypeSymbol? _sepReaderSymbol = compilation.GetTypeByMetadataName("nietras.SeparatedValues.SepReader");
+        private readonly INamedTypeSymbol? _iAsyncEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IAsyncEnumerable`1");
+        private readonly INamedTypeSymbol? _cancellationTokenSymbol = compilation.GetTypeByMetadataName("System.Threading.CancellationToken");
+        private readonly INamedTypeSymbol? _dateTimeSymbol = compilation.GetSpecialType(SpecialType.System_DateTime);
+        private readonly INamedTypeSymbol? _stringSymbol = compilation.GetSpecialType(SpecialType.System_String);
+        private readonly INamedTypeSymbol? _nullableSymbol = compilation.GetSpecialType(SpecialType.System_Nullable_T);
 
         public List<CsvMethodDefinition> GetCsvMethodDefinitions(ImmutableArray<MethodDeclarationSyntax> methods)
         {
@@ -71,9 +53,8 @@ public partial class CsvGenerator
                 if (containingClassSymbol == null) continue;
 
                 var returnType = methodSymbol.ReturnType as INamedTypeSymbol;
-                var itemTypeSymbol = returnType?.TypeArguments.FirstOrDefault() as INamedTypeSymbol;
 
-                if (itemTypeSymbol == null || !SymbolEqualityComparer.Default.Equals(itemTypeSymbol, containingClassSymbol))
+                if (returnType?.TypeArguments.FirstOrDefault() is not INamedTypeSymbol itemTypeSymbol || !SymbolEqualityComparer.Default.Equals(itemTypeSymbol, containingClassSymbol))
                 {
                     Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidReturnType, methodSyntax.ReturnType.GetLocation(), containingClassSymbol.Name));
                     continue;
@@ -141,7 +122,7 @@ public partial class CsvGenerator
                     ));
                 }
 
-                results.Add(new CsvMethodDefinition(methodSymbol, containingClassSymbol, itemTypeSymbol, propertiesToParse.ToImmutableList()));
+                results.Add(new CsvMethodDefinition(methodSymbol, containingClassSymbol, itemTypeSymbol, [.. propertiesToParse]));
             }
             return results;
         }

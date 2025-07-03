@@ -156,7 +156,7 @@ namespace Test
             (ImmutableArray<Diagnostic> d, _) = RoslynTestUtils.RunGenerator(
                 new CsvGenerator(),
                 refs,
-                new[] { text },
+                [text],
                 cancellationToken: cancellationToken);
 
             return Task.FromResult<IReadOnlyList<Diagnostic>>(d);

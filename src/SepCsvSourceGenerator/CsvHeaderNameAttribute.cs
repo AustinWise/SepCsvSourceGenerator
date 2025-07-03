@@ -1,12 +1,7 @@
 ﻿namespace SepCsvSourceGenerator;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-public sealed class CsvHeaderNameAttribute : CsvAttribute
+public sealed class CsvHeaderNameAttribute(string name) : CsvAttribute
 {
-    public CsvHeaderNameAttribute(string name)
-    {
-        Name = name;
-    }
-
-    public string Name { get; }
+    public string Name { get; } = name;
 }

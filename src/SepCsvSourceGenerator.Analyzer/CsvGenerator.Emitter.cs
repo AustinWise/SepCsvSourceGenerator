@@ -6,15 +6,10 @@ namespace SepCsvSourceGenerator;
 
 public partial class CsvGenerator
 {
-    internal sealed class Emitter
+    internal sealed class Emitter(Action<Diagnostic> reportDiagnostic)
     {
-        private readonly Action<Diagnostic> _reportDiagnostic;
-        private StringBuilder _builder = new StringBuilder();
-
-        public Emitter(Action<Diagnostic> reportDiagnostic)
-        {
-            _reportDiagnostic = reportDiagnostic;
-        }
+        private readonly Action<Diagnostic> _reportDiagnostic = reportDiagnostic;
+        private readonly StringBuilder _builder = new();
 
         public static string GetHintName(INamedTypeSymbol classSymbol)
         {

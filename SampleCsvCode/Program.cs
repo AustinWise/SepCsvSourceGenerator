@@ -37,27 +37,23 @@ partial class MyClass
 
     public async static partial IAsyncEnumerable<MyClass> ParseAsync(SepReader reader, [EnumeratorCancellation] CancellationToken ct)
     {
-        int transactionDateNdx;
-        int amountNdx;
-        int nameNdx;
-        int durationNdx;
 
         // required member
-        if (!reader.Header.TryIndexOf("Transaction Date", out transactionDateNdx))
+        if (!reader.Header.TryIndexOf("Transaction Date", out int transactionDateNdx))
         {
             throw new ArgumentException("Missing column name 'Transaction Date'");
         }
-        if (!reader.Header.TryIndexOf("Amount", out amountNdx))
+        if (!reader.Header.TryIndexOf("Amount", out int amountNdx))
         {
             throw new ArgumentException("Missing column name 'Amount'");
         }
-        if (!reader.Header.TryIndexOf("Name", out nameNdx))
+        if (!reader.Header.TryIndexOf("Name", out int nameNdx))
         {
             throw new ArgumentException("Missing column name 'Name'");
         }
 
         // not required member
-        if (!reader.Header.TryIndexOf("Duration", out durationNdx))
+        if (!reader.Header.TryIndexOf("Duration", out int durationNdx))
         {
             durationNdx = -1;
         }
@@ -66,7 +62,7 @@ partial class MyClass
         {
             ct.ThrowIfCancellationRequested();
 
-            MyClass ret = new MyClass()
+            MyClass ret = new()
             {
                 // DateTime optionally supports a format string.
                 TransactionDate = DateTime.ParseExact(row[transactionDateNdx].Span, "MM/dd/yyyy", CultureInfo.InvariantCulture),
