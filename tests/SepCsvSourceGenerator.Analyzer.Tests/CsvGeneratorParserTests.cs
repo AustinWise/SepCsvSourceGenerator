@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using nietras.SeparatedValues;
 using System.Collections.Immutable;
+using System.Reflection;
 
 namespace SepCsvSourceGenerator.Analyzer.Tests
 {
@@ -123,9 +124,46 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
             Assert.Equal("CSVGEN004", diagnostics[0].Id);
         }
 
+        [Fact]
+        public async Task InvalidHeaderName()
+        {
+            var diagnostics = await RunGenerator(@"
+                public partial class MyRecord
+                {
+                    [CsvHeaderName("""")]
+                    public string Name { get; set; }
+
+                    [GenerateCsvParser]
+                    public static partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
+                }
+            ");
+
+            Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN006", diagnostics[0].Id);
+        }
+
+        [Fact]
+        public async Task EssentialTypesNotFound()
+        {
+            var diagnostics = await RunGenerator(
+                @"
+                public partial class MyRecord
+                {
+                    [SepCsvSourceGenerator.GenerateCsvParserAttribute]
+                    public static partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
+                }
+                ",
+                wrap: false,
+                includeRefs: false);
+
+            Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN005", diagnostics[0].Id);
+        }
+
         private static Task<IReadOnlyList<Diagnostic>> RunGenerator(
             string code,
             bool wrap = true,
+            bool includeRefs = true,
             CancellationToken cancellationToken = default)
         {
             var text = code;
@@ -145,20 +183,29 @@ namespace Test
 ";
             }
 
-            var refs = new[]
+            Assembly[]? refs = null;
+            if (includeRefs)
             {
-                typeof(GenerateCsvParserAttribute).Assembly,
-                typeof(SepReader).Assembly,
-                typeof(IAsyncEnumerable<>).Assembly,
-            };
+                refs =
+                [
+                    typeof(GenerateCsvParserAttribute).Assembly,
+                    typeof(SepReader).Assembly,
+                    typeof(IAsyncEnumerable<>).Assembly,
+                ];
+            }
+            else
+            {
+                refs =
+                [
+                    typeof(GenerateCsvParserAttribute).Assembly,
+                    typeof(IAsyncEnumerable<>).Assembly,
+                ];
+            }
 
-            (ImmutableArray<Diagnostic> d, _) = RoslynTestUtils.RunGenerator(
-                new CsvGenerator(),
-                refs,
-                [text],
-                cancellationToken: cancellationToken);
+            var compilation = RoslynTestUtils.CreateCompilation([text], refs, includeRefs);
+            var (outputCompilation, diagnostics) = RoslynTestUtils.RunGenerator(compilation, new CsvGenerator(), cancellationToken);
 
-            return Task.FromResult<IReadOnlyList<Diagnostic>>(d);
+            return Task.FromResult<IReadOnlyList<Diagnostic>>(diagnostics);
         }
     }
 }

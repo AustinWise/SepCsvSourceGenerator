@@ -28,10 +28,10 @@ public partial class CsvGenerator
             var results = new List<CsvMethodDefinition>();
 
             if (_generateCsvParserAttributeSymbol == null || _csvHeaderNameAttributeSymbol == null || _csvDateFormatAttributeSymbol == null ||
-                _sepReaderSymbol == null || _iAsyncEnumerableSymbol == null || _cancellationTokenSymbol == null || _dateTimeSymbol == null || _stringSymbol == null)
+                _sepReaderSymbol == null || _iAsyncEnumerableSymbol == null || _cancellationTokenSymbol == null || _dateTimeSymbol == null ||
+                _stringSymbol == null  || _nullableSymbol == null)
             {
-                // Report diagnostic: essential types not found
-                // Diag(DiagnosticDescriptors.EssentialTypesNotFound, null); // Example
+                Diag(Diagnostic.Create(DiagnosticDescriptors.EssentialTypesNotFound, methods[0].GetLocation()));
                 return results;
             }
 
@@ -74,7 +74,7 @@ public partial class CsvGenerator
                     string? headerName = headerAttr.ConstructorArguments[0].Value as string;
                     if (string.IsNullOrWhiteSpace(headerName))
                     {
-                        // Diag(DiagnosticDescriptors.InvalidHeaderName, propertySymbol.Locations.FirstOrDefault(), propertySymbol.Name);
+                        Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidHeaderName, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name));
                         continue;
                     }
 
@@ -186,5 +186,9 @@ public partial class CsvGenerator
             new("CSVGEN003", "Invalid method parameters", "Method must have parameters '(SepReader reader, CancellationToken ct)'", "Usage", DiagnosticSeverity.Error, true);
         public static readonly DiagnosticDescriptor MissingDateFormatAttribute =
             new("CSVGEN004", "Missing CsvDateFormat attribute", "Property '{0}' of type DateTime or DateTime? must have a [CsvDateFormat] attribute", "Usage", DiagnosticSeverity.Error, true);
+        public static readonly DiagnosticDescriptor EssentialTypesNotFound =
+            new("CSVGEN005", "Essential types not found", "Essential types for source generation were not found. Please ensure the SepCsvSourceGenerator.Attributes nuget package is referenced.", "Usage", DiagnosticSeverity.Error, true);
+        public static readonly DiagnosticDescriptor InvalidHeaderName =
+            new("CSVGEN006", "Invalid header name", "Property '{0}' has an invalid [CsvHeaderName] attribute. The header name cannot be null or whitespace.", "Usage", DiagnosticSeverity.Error, true);
     }
 }
