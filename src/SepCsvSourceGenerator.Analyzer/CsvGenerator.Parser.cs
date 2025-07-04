@@ -173,22 +173,4 @@ public partial class CsvGenerator
             bool IsDateTime,
             bool IsString);
     }
-
-    // Define DiagnosticDescriptors (simplified for brevity)
-    // In a real scenario, these would be more detailed and localized.
-    internal static class DiagnosticDescriptors
-    {
-        public static readonly DiagnosticDescriptor MethodNotPartialStatic =
-            new("CSVGEN001", "Method must be partial and static", "Method '{0}' must be declared as 'partial static'", "Usage", DiagnosticSeverity.Error, true);
-        public static readonly DiagnosticDescriptor InvalidReturnType =
-            new("CSVGEN002", "Invalid return type", "Method must return 'IAsyncEnumerable<{0}>'", "Usage", DiagnosticSeverity.Error, true);
-        public static readonly DiagnosticDescriptor InvalidMethodParameters =
-            new("CSVGEN003", "Invalid method parameters", "Method must have parameters '(SepReader reader, CancellationToken ct)'", "Usage", DiagnosticSeverity.Error, true);
-        public static readonly DiagnosticDescriptor MissingDateFormatAttribute =
-            new("CSVGEN004", "Missing CsvDateFormat attribute", "Property '{0}' of type DateTime or DateTime? must have a [CsvDateFormat] attribute", "Usage", DiagnosticSeverity.Error, true);
-        public static readonly DiagnosticDescriptor EssentialTypesNotFound =
-            new("CSVGEN005", "Essential types not found", "Essential types for source generation were not found. Please ensure the SepCsvSourceGenerator.Attributes nuget package is referenced.", "Usage", DiagnosticSeverity.Error, true);
-        public static readonly DiagnosticDescriptor InvalidHeaderName =
-            new("CSVGEN006", "Invalid header name", "Property '{0}' has an invalid [CsvHeaderName] attribute. The header name cannot be null or whitespace.", "Usage", DiagnosticSeverity.Error, true);
-    }
 }
