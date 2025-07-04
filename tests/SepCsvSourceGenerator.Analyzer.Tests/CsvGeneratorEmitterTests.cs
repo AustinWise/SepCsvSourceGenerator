@@ -147,9 +147,6 @@ namespace Test
         [Fact]
         public async Task Emitter_GeneratesCorrectCode_ForRecordStruct()
         {
-            // TODO: Support record structs in the generator.
-            // Specifically, redeclare the struct like this:
-            // public partial record struct MyRecordStruct([CsvHeaderName("Name")] string Name)
             var source = @"
 using System;
 using System.Collections.Generic;
@@ -159,11 +156,8 @@ using nietras.SeparatedValues;
 
 namespace Test
 {
-    public partial record struct MyRecordStruct
+    public partial record struct MyRecordStruct([property: CsvHeaderName(""Name"")] string Name)
     {
-        [CsvHeaderName(""Name"")]
-        public string Name { get; set; }
-
         [GenerateCsvParser]
         public static partial IAsyncEnumerable<MyRecordStruct> ParseRecords(SepReader reader, CancellationToken cancellationToken);
     }
