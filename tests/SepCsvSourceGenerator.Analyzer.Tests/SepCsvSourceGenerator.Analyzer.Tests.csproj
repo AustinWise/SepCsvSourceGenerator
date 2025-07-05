@@ -7,7 +7,7 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
-        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <RootNamespace>US.AWise.SepCsvSourceGenerator.Tests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

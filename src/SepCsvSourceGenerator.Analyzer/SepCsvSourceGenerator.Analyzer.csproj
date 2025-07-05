@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>true</ImplicitUsings>
         <LangVersion>13</LangVersion>
+        <RootNamespace>US.AWise.SepCsvSourceGenerator</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

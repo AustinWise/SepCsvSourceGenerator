@@ -3,7 +3,7 @@ using nietras.SeparatedValues;
 using System.Collections.Immutable;
 using System.Reflection;
 
-namespace SepCsvSourceGenerator.Analyzer.Tests
+namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests
 {
     public class CsvGeneratorParserTests
     {
@@ -160,7 +160,7 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using SepCsvSourceGenerator;
+using US.AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
 namespace Test

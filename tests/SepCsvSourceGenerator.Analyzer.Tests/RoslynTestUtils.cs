@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using System.Collections.Immutable;
 using System.Reflection;
 
-namespace SepCsvSourceGenerator.Analyzer.Tests
+namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests
 {
     internal static class RoslynTestUtils
     {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace SepCsvSourceGenerator;
+namespace US.AWise.SepCsvSourceGenerator.Analyzer;
 
 // TODO: consider adding support for localization.
 internal static class DiagnosticDescriptors

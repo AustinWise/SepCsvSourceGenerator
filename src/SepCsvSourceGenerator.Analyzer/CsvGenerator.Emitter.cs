@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Text;
 
-namespace SepCsvSourceGenerator;
+namespace US.AWise.SepCsvSourceGenerator.Analyzer;
 
 public partial class CsvGenerator
 {

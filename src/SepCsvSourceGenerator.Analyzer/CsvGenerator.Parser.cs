@@ -1,10 +1,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace SepCsvSourceGenerator;
+namespace US.AWise.SepCsvSourceGenerator.Analyzer;
 
 public partial class CsvGenerator
 {
@@ -15,8 +14,8 @@ public partial class CsvGenerator
         private readonly CancellationToken _cancellationToken = cancellationToken;
 
         private readonly INamedTypeSymbol? _generateCsvParserAttributeSymbol = compilation.GetTypeByMetadataName(GenerateCsvParserAttributeFullName);
-        private readonly INamedTypeSymbol? _csvHeaderNameAttributeSymbol = compilation.GetTypeByMetadataName("SepCsvSourceGenerator.CsvHeaderNameAttribute");
-        private readonly INamedTypeSymbol? _csvDateFormatAttributeSymbol = compilation.GetTypeByMetadataName("SepCsvSourceGenerator.CsvDateFormatAttribute");
+        private readonly INamedTypeSymbol? _csvHeaderNameAttributeSymbol = compilation.GetTypeByMetadataName("US.AWise.SepCsvSourceGenerator.CsvHeaderNameAttribute");
+        private readonly INamedTypeSymbol? _csvDateFormatAttributeSymbol = compilation.GetTypeByMetadataName("US.AWise.SepCsvSourceGenerator.CsvDateFormatAttribute");
         private readonly INamedTypeSymbol? _sepReaderSymbol = compilation.GetTypeByMetadataName("nietras.SeparatedValues.SepReader");
         private readonly INamedTypeSymbol? _iAsyncEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IAsyncEnumerable`1");
         private readonly INamedTypeSymbol? _cancellationTokenSymbol = compilation.GetTypeByMetadataName("System.Threading.CancellationToken");
