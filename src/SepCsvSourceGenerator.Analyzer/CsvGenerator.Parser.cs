@@ -76,12 +76,18 @@ public partial class CsvGenerator
                         if (propertySymbol.IsStatic || propertySymbol.SetMethod == null) continue; // Must be instance property with a setter/init
                         if (!seenProperties.Add(propertySymbol.Name)) continue; // Property already seen in a more derived type
 
+                        // From here on, if we use "continue" we must raise a diagnostic.
+                        // This ensures we will either get NoPropertiesFound or some other diagnostic if something is wrong.
+
                         AttributeData? headerAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
                             SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvHeaderNameAttributeSymbol));
 
-                        if (headerAttr == null || headerAttr.ConstructorArguments.Length == 0) continue;
+                        string? headerName = null;
+                        if (headerAttr != null && headerAttr.ConstructorArguments.Length == 1)
+                        {
+                            headerName = headerAttr.ConstructorArguments[0].Value as string;
+                        }
 
-                        string? headerName = headerAttr.ConstructorArguments[0].Value as string;
                         if (string.IsNullOrWhiteSpace(headerName))
                         {
                             Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidHeaderName, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name));
@@ -137,6 +143,13 @@ public partial class CsvGenerator
                 if (seenProperties.Count == 0)
                 {
                     Diag(Diagnostic.Create(DiagnosticDescriptors.NoPropertiesFound, methodSyntax.Identifier.GetLocation(), itemTypeSymbol.Name));
+                    continue;
+                }
+
+                if (propertiesToParse.Count == 0)
+                {
+                    // If we saw property but it had something wrong with it, we should have already raised a diagnostic.
+                    // So we silently continue.
                     continue;
                 }
 
