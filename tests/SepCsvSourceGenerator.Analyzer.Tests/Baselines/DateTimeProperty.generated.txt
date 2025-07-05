@@ -10,21 +10,11 @@ namespace Test
     {
         public static async partial global::System.Collections.Generic.IAsyncEnumerable<global::Test.MyRecord> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
         {
-            int NameNdx;
             int DateNdx;
-            int ValueNdx;
 
-            if (!reader.Header.TryIndexOf("Name", out NameNdx))
-            {
-                NameNdx = -1;
-            }
             if (!reader.Header.TryIndexOf("Date", out DateNdx))
             {
                 DateNdx = -1;
-            }
-            if (!reader.Header.TryIndexOf("Value", out ValueNdx))
-            {
-                ValueNdx = -1;
             }
 
             await foreach (SepReader.Row row in reader
@@ -36,17 +26,9 @@ namespace Test
                 ct.ThrowIfCancellationRequested();
 
                 global::Test.MyRecord ret = new global::Test.MyRecord();
-                if (NameNdx != -1)
-                {
-                    ret.Name = row[NameNdx].Span.ToString();
-                }
                 if (DateNdx != -1)
                 {
                     ret.Date = global::System.DateTime.ParseExact(row[DateNdx].Span, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-                }
-                if (ValueNdx != -1)
-                {
-                    ret.Value = int.Parse(row[ValueNdx].Span, CultureInfo.InvariantCulture);
                 }
                 yield return ret;
             }

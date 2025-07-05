@@ -7,7 +7,7 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
         private static readonly bool s_generateBaselines = Environment.GetEnvironmentVariable("GENERATE_BASELINES")?.ToLowerInvariant() is "true" or "1";
 
         [Fact]
-        public void Emitter_GeneratesCorrectCode_ForBasicClass()
+        public void Emitter_GeneratesCorrectCode_ForDateTimeProperty()
         {
             var source = @"
 using System;
@@ -20,22 +20,16 @@ namespace Test
 {
     public partial class MyRecord
     {
-        [CsvHeaderName(""Name"")]
-        public string Name { get; set; }
-
         [CsvHeaderName(""Date"")]
         [CsvDateFormat(""yyyy-MM-dd"")]
         public DateTime Date { get; set; }
-
-        [CsvHeaderName(""Value"")]
-        public int Value { get; set; }
 
         [GenerateCsvParser]
         public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
     }
 }
 ";
-            RunTestAsync(source, "BasicClass.generated.txt");
+            RunTestAsync(source, "DateTimeProperty.generated.txt");
         }
 
         [Fact]
