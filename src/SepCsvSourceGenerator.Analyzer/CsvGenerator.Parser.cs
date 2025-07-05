@@ -74,16 +74,16 @@ public partial class CsvGenerator
                     {
                         if (member is not IPropertySymbol propertySymbol) continue;
                         if (propertySymbol.IsStatic || propertySymbol.SetMethod == null) continue; // Must be instance property with a setter/init
+                        AttributeData? headerAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
+                            SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvHeaderNameAttributeSymbol));
+                        if (headerAttr is null) continue;
                         if (!seenProperties.Add(propertySymbol.Name)) continue; // Property already seen in a more derived type
 
                         // From here on, if we use "continue" we must raise a diagnostic.
                         // This ensures we will either get NoPropertiesFound or some other diagnostic if something is wrong.
 
-                        AttributeData? headerAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
-                            SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvHeaderNameAttributeSymbol));
-
                         string? headerName = null;
-                        if (headerAttr != null && headerAttr.ConstructorArguments.Length == 1)
+                        if (headerAttr.ConstructorArguments.Length == 1)
                         {
                             headerName = headerAttr.ConstructorArguments[0].Value as string;
                         }

@@ -199,6 +199,8 @@ public partial class MyGlobalRecord
     [CsvHeaderName(""Name"")]
     public string Name { get; set; }
 
+    public string UnrelatedProperty { get; set; }
+
     [GenerateCsvParser]
     public static partial IEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
 }
