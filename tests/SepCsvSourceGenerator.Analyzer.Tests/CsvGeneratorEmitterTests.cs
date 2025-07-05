@@ -201,7 +201,7 @@ using nietras.SeparatedValues;
 
 namespace Test
 {
-    public partial class MyGenericRecord<T> where T : new()
+    public partial class MyGenericRecord<T> where T : ISpanParsable<T>
     {
         [CsvHeaderName(""Name"")]
         public string Name { get; set; }
