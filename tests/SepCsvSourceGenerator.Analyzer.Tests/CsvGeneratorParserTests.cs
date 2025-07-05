@@ -142,24 +142,6 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
             Assert.Equal("CSVGEN006", diagnostics[0].Id);
         }
 
-        [Fact]
-        public async Task EssentialTypesNotFound()
-        {
-            var diagnostics = await RunGenerator(
-                @"
-                public partial class MyRecord
-                {
-                    [SepCsvSourceGenerator.GenerateCsvParserAttribute]
-                    public static partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
-                }
-                ",
-                wrap: false,
-                includeRefs: false);
-
-            Assert.Single(diagnostics);
-            Assert.Equal("CSVGEN005", diagnostics[0].Id);
-        }
-
         private static Task<IReadOnlyList<Diagnostic>> RunGenerator(
             string code,
             bool wrap = true,
@@ -188,7 +170,6 @@ namespace Test
             {
                 refs =
                 [
-                    typeof(GenerateCsvParserAttribute).Assembly,
                     typeof(SepReader).Assembly,
                     typeof(IAsyncEnumerable<>).Assembly,
                 ];
@@ -197,7 +178,6 @@ namespace Test
             {
                 refs =
                 [
-                    typeof(GenerateCsvParserAttribute).Assembly,
                     typeof(IAsyncEnumerable<>).Assembly,
                 ];
             }

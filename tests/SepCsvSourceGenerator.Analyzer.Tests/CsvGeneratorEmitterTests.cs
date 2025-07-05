@@ -221,7 +221,6 @@ namespace Test
         {
             var refs = new[]
             {
-                typeof(GenerateCsvParserAttribute).Assembly,
                 typeof(SepReader).Assembly,
                 typeof(IAsyncEnumerable<>).Assembly,
             };

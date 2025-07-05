@@ -27,7 +27,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\SepCsvSourceGenerator.Analyzer\SepCsvSourceGenerator.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
-        <ProjectReference Include="..\..\src\SepCsvSourceGenerator\SepCsvSourceGenerator.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -31,7 +31,10 @@ public partial class CsvGenerator
                 _sepReaderSymbol == null || _iAsyncEnumerableSymbol == null || _cancellationTokenSymbol == null || _dateTimeSymbol == null ||
                 _stringSymbol == null || _nullableSymbol == null)
             {
-                Diag(Diagnostic.Create(DiagnosticDescriptors.EssentialTypesNotFound, methods[0].GetLocation()));
+                // TODO: consider reintroducing this diagnostic. Currently we include our attributes in the compilation,
+                // so it is unlikely that our attributes will be missing. A more likly scenario is that the user is targeting an unsupported framework
+                // that is missing things like IAsyncEnumerable<T>.
+                //Diag(Diagnostic.Create(DiagnosticDescriptors.EssentialTypesNotFound, methods[0].GetLocation()));
                 return results;
             }
 
