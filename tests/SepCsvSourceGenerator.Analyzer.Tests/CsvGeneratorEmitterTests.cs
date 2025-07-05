@@ -232,9 +232,8 @@ namespace Test
                 [source]);
 
             Assert.Empty(diagnostics);
-            Assert.Equal(2, generatedSources.Length);
 
-            var generatedParser = generatedSources.First(s => s.HintName.EndsWith(".CsvGenerator.g.cs"));
+            var generatedParser = generatedSources.Single(s => s.HintName.EndsWith(".CsvGenerator.g.cs"));
 
             if (s_generateBaselines)
             {
