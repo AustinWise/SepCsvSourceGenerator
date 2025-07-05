@@ -7,7 +7,7 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
         private static readonly bool s_generateBaselines = Environment.GetEnvironmentVariable("GENERATE_BASELINES")?.ToLowerInvariant() is "true" or "1";
 
         [Fact]
-        public async Task Emitter_GeneratesCorrectCode_ForBasicClass()
+        public void Emitter_GeneratesCorrectCode_ForBasicClass()
         {
             var source = @"
 using System;
@@ -35,11 +35,11 @@ namespace Test
     }
 }
 ";
-            await RunTestAsync(source, "BasicClass.generated.txt");
+            RunTestAsync(source, "BasicClass.generated.txt");
         }
 
         [Fact]
-        public async Task Emitter_GeneratesCorrectCode_ForClassInNamespace()
+        public void Emitter_GeneratesCorrectCode_ForClassInNamespace()
         {
             var source = @"
 using System;
@@ -60,11 +60,11 @@ namespace My.Awesome.Namespace
     }
 }
 ";
-            await RunTestAsync(source, "ClassInNamespace.generated.txt");
+            RunTestAsync(source, "ClassInNamespace.generated.txt");
         }
 
         [Fact]
-        public async Task Emitter_GeneratesCorrectCode_ForRequiredProperty()
+        public void Emitter_GeneratesCorrectCode_ForRequiredProperty()
         {
             var source = @"
 using System;
@@ -85,11 +85,11 @@ namespace Test
     }
 }
 ";
-            await RunTestAsync(source, "RequiredProperty.generated.txt");
+            RunTestAsync(source, "RequiredProperty.generated.txt");
         }
 
         [Fact]
-        public async Task Emitter_GeneratesCorrectCode_ForIgnoredProperty()
+        public void Emitter_GeneratesCorrectCode_ForIgnoredProperty()
         {
             var source = @"
 using System;
@@ -113,11 +113,11 @@ namespace Test
     }
 }
 ";
-            await RunTestAsync(source, "IgnoredProperty.generated.txt");
+            RunTestAsync(source, "IgnoredProperty.generated.txt");
         }
 
         [Fact]
-        public async Task Emitter_GeneratesCorrectCode_ForNestedClass()
+        public void Emitter_GeneratesCorrectCode_ForNestedClass()
         {
             var source = @"
 using System;
@@ -141,11 +141,11 @@ namespace Test
     }
 }
 ";
-            await RunTestAsync(source, "NestedClass.generated.txt");
+            RunTestAsync(source, "NestedClass.generated.txt");
         }
 
         [Fact]
-        public async Task Emitter_GeneratesCorrectCode_ForRecordStruct()
+        public void Emitter_GeneratesCorrectCode_ForRecordStruct()
         {
             var source = @"
 using System;
@@ -163,11 +163,11 @@ namespace Test
     }
 }
 ";
-            await RunTestAsync(source, "RecordStruct.generated.txt");
+            RunTestAsync(source, "RecordStruct.generated.txt");
         }
 
         [Fact]
-        public async Task Emitter_GeneratesCorrectCode_ForGlobalNamespaceClass()
+        public void Emitter_GeneratesCorrectCode_ForGlobalNamespaceClass()
         {
             var source = @"
 using System;
@@ -185,11 +185,11 @@ public partial class MyGlobalRecord
     public static partial IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
 }
 ";
-            await RunTestAsync(source, "GlobalNamespaceClass.generated.txt");
+            RunTestAsync(source, "GlobalNamespaceClass.generated.txt");
         }
 
         [Fact]
-        public async Task Emitter_GeneratesCorrectCode_ForDifferentModifiers()
+        public void Emitter_GeneratesCorrectCode_ForDifferentModifiers()
         {
             var source = @"
 using System;
@@ -212,11 +212,11 @@ public partial class MyGlobalRecord : MyBaseClass
     protected override partial IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
 }
 ";
-            await RunTestAsync(source, "DifferentModifiers.generated.txt");
+            RunTestAsync(source, "DifferentModifiers.generated.txt");
         }
 
         [Fact]
-        public async Task Emitter_GeneratesCorrectCode_ForGenericClass()
+        public void Emitter_GeneratesCorrectCode_ForGenericClass()
         {
             // TODO: make this only work when T is constrained to implement ISpanParsable.
             var source = @"
@@ -241,10 +241,10 @@ namespace Test
     }
 }
 ";
-            await RunTestAsync(source, "GenericClass.generated.txt");
+            RunTestAsync(source, "GenericClass.generated.txt");
         }
 
-        private static async Task RunTestAsync(string source, string baselineFileName)
+        private static void RunTestAsync(string source, string baselineFileName)
         {
             var refs = new[]
             {
@@ -273,11 +273,11 @@ namespace Test
                 {
                     throw new Exception("Could not find the Baselines directory.");
                 }
-                await File.WriteAllTextAsync(Path.Combine(directory, "Baselines", baselineFileName), generatedParser.Source);
+                File.WriteAllText(Path.Combine(directory, "Baselines", baselineFileName), generatedParser.Source);
             }
             else
             {
-                var baseline = await File.ReadAllTextAsync(Path.Combine("Baselines", baselineFileName));
+                var baseline = File.ReadAllText(Path.Combine("Baselines", baselineFileName));
 
                 var expected = baseline.ReplaceLineEndings();
                 var actual = generatedParser.Source.ReplaceLineEndings();

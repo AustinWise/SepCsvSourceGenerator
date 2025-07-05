@@ -8,9 +8,9 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
     public class CsvGeneratorParserTests
     {
         [Fact]
-        public async Task ValidStaticCase()
+        public void ValidStaticCase()
         {
-            var diagnostics = await RunGenerator(@"
+            var diagnostics = RunGenerator(@"
                 public partial class MyRecord
                 {
                     [CsvHeaderName(""Name"")]
@@ -29,9 +29,9 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
-        public async Task ValidInstanceCase()
+        public void ValidInstanceCase()
         {
-            var diagnostics = await RunGenerator(@"
+            var diagnostics = RunGenerator(@"
                 public partial class MyRecord
                 {
                     [CsvHeaderName(""Name"")]
@@ -50,9 +50,9 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
-        public async Task MethodNotPartial()
+        public void MethodNotPartial()
         {
-            var diagnostics = await RunGenerator(@"
+            var diagnostics = RunGenerator(@"
                 public partial class MyRecord
                 {
                     [GenerateCsvParser]
@@ -65,9 +65,9 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
-        public async Task InvalidReturnType()
+        public void InvalidReturnType()
         {
-            var diagnostics = await RunGenerator(@"
+            var diagnostics = RunGenerator(@"
                 public partial class MyRecord
                 {
                     [GenerateCsvParser]
@@ -80,9 +80,9 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
-        public async Task InvalidReturnTypeArgument()
+        public void InvalidReturnTypeArgument()
         {
-            var diagnostics = await RunGenerator(@"
+            var diagnostics = RunGenerator(@"
                 public partial class MyRecord
                 {
                 }
@@ -98,9 +98,9 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
-        public async Task InvalidParameters()
+        public void InvalidParameters()
         {
-            var diagnostics = await RunGenerator(@"
+            var diagnostics = RunGenerator(@"
                 public partial class MyRecord
                 {
                     [GenerateCsvParser]
@@ -113,9 +113,9 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
-        public async Task MissingDateFormat()
+        public void MissingDateFormat()
         {
-            var diagnostics = await RunGenerator(@"
+            var diagnostics = RunGenerator(@"
                 public partial class MyRecord
                 {
                     [CsvHeaderName(""Date"")]
@@ -131,9 +131,9 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
-        public async Task InvalidHeaderName()
+        public void InvalidHeaderName()
         {
-            var diagnostics = await RunGenerator(@"
+            var diagnostics = RunGenerator(@"
                 public partial class MyRecord
                 {
                     [CsvHeaderName("""")]
@@ -148,11 +148,10 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
             Assert.Equal("CSVGEN006", diagnostics[0].Id);
         }
 
-        private static Task<IReadOnlyList<Diagnostic>> RunGenerator(
+        private static ImmutableArray<Diagnostic> RunGenerator(
             string code,
             bool wrap = true,
-            bool includeRefs = true,
-            CancellationToken cancellationToken = default)
+            bool includeRefs = true)
         {
             var text = code;
             if (wrap)
@@ -188,10 +187,10 @@ namespace Test
                 ];
             }
 
-            var compilation = RoslynTestUtils.CreateCompilation([text], refs, includeRefs);
-            var (outputCompilation, diagnostics) = RoslynTestUtils.RunGenerator(compilation, new CsvGenerator(), cancellationToken);
+            var compilation = RoslynTestUtils.CreateCompilation([text], refs);
+            var (outputCompilation, diagnostics) = RoslynTestUtils.RunGenerator(compilation, new CsvGenerator());
 
-            return Task.FromResult<IReadOnlyList<Diagnostic>>(diagnostics);
+            return diagnostics;
         }
     }
 }
