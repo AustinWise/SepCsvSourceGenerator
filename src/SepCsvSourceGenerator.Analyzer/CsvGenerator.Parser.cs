@@ -133,7 +133,7 @@ public partial class CsvGenerator
         private bool ValidateMethodSignature(IMethodSymbol methodSymbol, MethodDeclarationSyntax methodSyntax)
         {
             bool isValid = true;
-            if (!methodSymbol.IsPartialDefinition || !methodSymbol.IsStatic)
+            if (!methodSymbol.IsPartialDefinition)
             {
                 Diag(Diagnostic.Create(DiagnosticDescriptors.MethodNotPartialStatic, methodSyntax.Identifier.GetLocation()));
                 isValid = false;

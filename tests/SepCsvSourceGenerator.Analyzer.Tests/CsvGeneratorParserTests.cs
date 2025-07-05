@@ -8,7 +8,7 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
     public class CsvGeneratorParserTests
     {
         [Fact]
-        public async Task ValidCase()
+        public async Task ValidStaticCase()
         {
             var diagnostics = await RunGenerator(@"
                 public partial class MyRecord
@@ -29,6 +29,27 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
+        public async Task ValidInstanceCase()
+        {
+            var diagnostics = await RunGenerator(@"
+                public partial class MyRecord
+                {
+                    [CsvHeaderName(""Name"")]
+                    public string Name { get; set; }
+
+                    [CsvHeaderName(""Date"")]
+                    [CsvDateFormat(""yyyy-MM-dd"")]
+                    public DateTime Date { get; set; }
+
+                    [GenerateCsvParser]
+                    public partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
+                }
+            ");
+
+            Assert.Empty(diagnostics);
+        }
+
+        [Fact]
         public async Task MethodNotPartial()
         {
             var diagnostics = await RunGenerator(@"
@@ -36,21 +57,6 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
                 {
                     [GenerateCsvParser]
                     public static IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken) => default;
-                }
-            ");
-
-            Assert.Single(diagnostics);
-            Assert.Equal("CSVGEN001", diagnostics[0].Id);
-        }
-
-        [Fact]
-        public async Task MethodNotStatic()
-        {
-            var diagnostics = await RunGenerator(@"
-                public partial class MyRecord
-                {
-                    [GenerateCsvParser]
-                    public partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
                 }
             ");
 
