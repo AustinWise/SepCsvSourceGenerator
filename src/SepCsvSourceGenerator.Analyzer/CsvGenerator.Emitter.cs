@@ -119,11 +119,20 @@ public partial class CsvGenerator
                 modifiers.Add("override");
             }
             // The 'async' keyword is not a modifier in the traditional sense for symbols, so we add it manually.
-            modifiers.Add("async");
+            if (methodDef.IsAsync)
+            {
+                modifiers.Add("async");
+            }
             modifiers.Add("partial");
 
+            string returnType = methodDef.IsAsync
+                ? $"global::System.Collections.Generic.IAsyncEnumerable<{itemTypeName}>"
+                : $"global::System.Collections.Generic.IEnumerable<{itemTypeName}>";
+
             _builder.Append(baseIndent).Append(string.Join(" ", modifiers))
-                    .Append($" global::System.Collections.Generic.IAsyncEnumerable<{itemTypeName}> {methodDef.MethodSymbol.Name}(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)")
+                    .Append($" {returnType} {methodDef.MethodSymbol.Name}(SepReader reader, ")
+                    .Append(methodDef.IsAsync ? "[EnumeratorCancellation] " : "")
+                    .Append("global::System.Threading.CancellationToken ct)")
                     .AppendLine()
                     .Append(baseIndent).AppendLine("{");
 
@@ -153,12 +162,19 @@ public partial class CsvGenerator
             }
             _builder.AppendLine();
 
-            _builder.Append(indent).AppendLine("await foreach (SepReader.Row row in reader");
-            // The ConfigureAwait only works in .NET 10 and later: https://github.com/dotnet/runtime/issues/112007
-            _builder.Append(indent).AppendLine("#if NET10_0_OR_GREATER");
-            _builder.Append(indent).AppendLine(".WithCancellation(ct).ConfigureAwait(false)");
-            _builder.Append(indent).AppendLine("#endif");
-            _builder.Append(indent).AppendLine(")");
+            if (methodDef.IsAsync)
+            {
+                _builder.Append(indent).AppendLine("await foreach (SepReader.Row row in reader");
+                // The ConfigureAwait only works in .NET 10 and later: https://github.com/dotnet/runtime/issues/112007
+                _builder.Append(indent).AppendLine("#if NET10_0_OR_GREATER");
+                _builder.Append(indent).AppendLine(".WithCancellation(ct).ConfigureAwait(false)");
+                _builder.Append(indent).AppendLine("#endif");
+                _builder.Append(indent).AppendLine(")");
+            }
+            else
+            {
+                _builder.Append(indent).AppendLine("foreach (SepReader.Row row in reader)");
+            }
 
             _builder.Append(indent).AppendLine("{");
             string innerIndent = indent + "    ";

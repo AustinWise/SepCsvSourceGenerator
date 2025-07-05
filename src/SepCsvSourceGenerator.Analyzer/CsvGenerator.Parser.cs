@@ -18,6 +18,7 @@ public partial class CsvGenerator
         private readonly INamedTypeSymbol? _csvDateFormatAttributeSymbol = compilation.GetTypeByMetadataName("US.AWise.SepCsvSourceGenerator.CsvDateFormatAttribute");
         private readonly INamedTypeSymbol? _sepReaderSymbol = compilation.GetTypeByMetadataName("nietras.SeparatedValues.SepReader");
         private readonly INamedTypeSymbol? _iAsyncEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IAsyncEnumerable`1");
+        private readonly INamedTypeSymbol? _iEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IEnumerable`1");
         private readonly INamedTypeSymbol? _cancellationTokenSymbol = compilation.GetTypeByMetadataName("System.Threading.CancellationToken");
         private readonly INamedTypeSymbol? _dateTimeSymbol = compilation.GetSpecialType(SpecialType.System_DateTime);
         private readonly INamedTypeSymbol? _stringSymbol = compilation.GetSpecialType(SpecialType.System_String);
@@ -28,11 +29,11 @@ public partial class CsvGenerator
             var results = new List<CsvMethodDefinition>();
 
             if (_generateCsvParserAttributeSymbol == null || _csvHeaderNameAttributeSymbol == null || _csvDateFormatAttributeSymbol == null ||
-                _sepReaderSymbol == null || _iAsyncEnumerableSymbol == null || _cancellationTokenSymbol == null || _dateTimeSymbol == null ||
+                _sepReaderSymbol == null || _iAsyncEnumerableSymbol == null || _iEnumerableSymbol == null || _cancellationTokenSymbol == null || _dateTimeSymbol == null ||
                 _stringSymbol == null || _nullableSymbol == null)
             {
                 // TODO: consider reintroducing this diagnostic. Currently we include our attributes in the compilation,
-                // so it is unlikely that our attributes will be missing. A more likly scenario is that the user is targeting an unsupported framework
+                // so it is unlikely that our attributes will be missing. A more likely scenario is that the user is targeting an unsupported framework
                 // that is missing things like IAsyncEnumerable<T>.
                 //Diag(Diagnostic.Create(DiagnosticDescriptors.EssentialTypesNotFound, methods[0].GetLocation()));
                 return results;
@@ -47,7 +48,7 @@ public partial class CsvGenerator
                     continue;
                 }
 
-                if (!ValidateMethodSignature(methodSymbol, methodSyntax))
+                if (!ValidateMethodSignature(methodSymbol, methodSyntax, out bool isAsync))
                 {
                     continue;
                 }
@@ -101,7 +102,7 @@ public partial class CsvGenerator
                                 string.IsNullOrWhiteSpace(dateFormatAttr.ConstructorArguments[0].Value as string))
                             {
                                 Diag(Diagnostic.Create(DiagnosticDescriptors.MissingDateFormatAttribute, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name));
-                                continue; // Skip this property if DateTime and no format
+                                continue;
                             }
                             dateFormat = dateFormatAttr.ConstructorArguments[0].Value as string;
                         }
@@ -133,13 +134,20 @@ public partial class CsvGenerator
                     currentType = currentType.BaseType;
                 }
 
-                results.Add(new CsvMethodDefinition(methodSymbol, containingClassSymbol, itemTypeSymbol, [.. propertiesToParse]));
+                if (seenProperties.Count == 0)
+                {
+                    Diag(Diagnostic.Create(DiagnosticDescriptors.NoPropertiesFound, methodSyntax.Identifier.GetLocation(), itemTypeSymbol.Name));
+                    continue;
+                }
+
+                results.Add(new CsvMethodDefinition(methodSymbol, containingClassSymbol, itemTypeSymbol, isAsync, [.. propertiesToParse]));
             }
             return results;
         }
 
-        private bool ValidateMethodSignature(IMethodSymbol methodSymbol, MethodDeclarationSyntax methodSyntax)
+        private bool ValidateMethodSignature(IMethodSymbol methodSymbol, MethodDeclarationSyntax methodSyntax, out bool isAsync)
         {
+            isAsync = false;
             bool isValid = true;
             if (!methodSymbol.IsPartialDefinition)
             {
@@ -148,11 +156,24 @@ public partial class CsvGenerator
             }
 
             if (methodSymbol.ReturnType is not INamedTypeSymbol returnType ||
-                !SymbolEqualityComparer.Default.Equals(returnType.OriginalDefinition, _iAsyncEnumerableSymbol) ||
                 returnType.TypeArguments.Length != 1)
             {
                 Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidReturnType, methodSyntax.ReturnType.GetLocation(), methodSymbol.ContainingType.Name));
+                return false;
+            }
+
+            bool isAsyncEnumerable = SymbolEqualityComparer.Default.Equals(returnType.OriginalDefinition, _iAsyncEnumerableSymbol);
+            bool isEnumerable = SymbolEqualityComparer.Default.Equals(returnType.OriginalDefinition, _iEnumerableSymbol);
+
+            if (!isAsyncEnumerable && !isEnumerable)
+            {
+                Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidReturnType, methodSyntax.ReturnType.GetLocation(), methodSymbol.ContainingType.Name));
                 isValid = false;
+            }
+
+            if (isAsyncEnumerable)
+            {
+                isAsync = true;
             }
 
             if (methodSymbol.Parameters.Length != 2 ||
@@ -171,6 +192,7 @@ public partial class CsvGenerator
             IMethodSymbol MethodSymbol,
             INamedTypeSymbol ContainingClassSymbol,
             INamedTypeSymbol ItemTypeSymbol,
+            bool IsAsync,
             ImmutableList<CsvPropertyDefinition> PropertiesToParse);
 
         internal record CsvPropertyDefinition(

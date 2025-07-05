@@ -185,6 +185,28 @@ public partial class MyGlobalRecord
         }
 
         [Fact]
+        public void Emitter_GeneratesCorrectCode_ForIEnumerable()
+        {
+            var source = @"
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using US.AWise.SepCsvSourceGenerator;
+using nietras.SeparatedValues;
+
+public partial class MyGlobalRecord
+{
+    [CsvHeaderName(""Name"")]
+    public string Name { get; set; }
+
+    [GenerateCsvParser]
+    public static partial IEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+}
+";
+            RunTestAsync(source, "IEnumerable.generated.txt");
+        }
+
+        [Fact]
         public void Emitter_GeneratesCorrectCode_ForDifferentModifiers()
         {
             var source = @"

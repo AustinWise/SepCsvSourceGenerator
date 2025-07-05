@@ -85,8 +85,20 @@ namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests
             var diagnostics = RunGenerator(@"
                 public partial class MyRecord
                 {
+                    [GenerateCsvParser]
+                    public static partial List<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
                 }
-                public partial class AnotherClass
+            ");
+
+            Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN002", diagnostics[0].Id);
+        }
+
+        [Fact]
+        public void NoPropertiesFound()
+        {
+            var diagnostics = RunGenerator(@"
+                public partial class MyRecord
                 {
                     [GenerateCsvParser]
                     public static partial IEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
@@ -94,7 +106,7 @@ namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests
             ");
 
             Assert.Single(diagnostics);
-            Assert.Equal("CSVGEN002", diagnostics[0].Id);
+            Assert.Equal("CSVGEN007", diagnostics[0].Id);
         }
 
         [Fact]
@@ -136,8 +148,11 @@ namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests
             var diagnostics = RunGenerator(@"
                 public partial class MyRecord
                 {
+                    [CsvHeaderName(""Valid"")]
+                    public string Valid { get; set; }
+
                     [CsvHeaderName("""")]
-                    public string Name { get; set; }
+                    public string Invalid { get; set; }
 
                     [GenerateCsvParser]
                     public static partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
