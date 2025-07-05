@@ -80,10 +80,10 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
                 public partial class MyRecord
                 {
                 }
-                public partial class AnotherRecord
+                public partial class AnotherClass
                 {
                     [GenerateCsvParser]
-                    public static partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
+                    public static partial IEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
                 }
             ");
 

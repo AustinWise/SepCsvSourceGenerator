@@ -54,7 +54,7 @@ public partial class CsvGenerator
 
                 var returnType = methodSymbol.ReturnType as INamedTypeSymbol;
 
-                if (returnType?.TypeArguments.FirstOrDefault() is not INamedTypeSymbol itemTypeSymbol || !SymbolEqualityComparer.Default.Equals(itemTypeSymbol, containingClassSymbol))
+                if (returnType?.TypeArguments.FirstOrDefault() is not INamedTypeSymbol itemTypeSymbol)
                 {
                     Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidReturnType, methodSyntax.ReturnType.GetLocation(), containingClassSymbol.Name));
                     continue;
