@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 public partial class MyGlobalRecord
 {
-    public static async partial global::System.Collections.Generic.IAsyncEnumerable<global::MyGlobalRecord> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
+    protected override async partial global::System.Collections.Generic.IAsyncEnumerable<global::MyGlobalRecord> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
     {
         int NameNdx;
 

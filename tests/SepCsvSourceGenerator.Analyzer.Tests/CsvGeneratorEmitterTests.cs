@@ -189,6 +189,33 @@ public partial class MyGlobalRecord
         }
 
         [Fact]
+        public async Task Emitter_GeneratesCorrectCode_ForDifferentModifiers()
+        {
+            var source = @"
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using SepCsvSourceGenerator;
+using nietras.SeparatedValues;
+
+public partial class MyBaseClass
+{
+    protected abstract IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+}
+
+public partial class MyGlobalRecord : MyBaseClass
+{
+    [CsvHeaderName(""Name"")]
+    public string Name { get; set; }
+
+    [GenerateCsvParser]
+    protected override partial IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+}
+";
+            await RunTestAsync(source, "DifferentModifiers.generated.txt");
+        }
+
+        [Fact]
         public async Task Emitter_GeneratesCorrectCode_ForGenericClass()
         {
             // TODO: make this only work when T is constrained to implement ISpanParsable.

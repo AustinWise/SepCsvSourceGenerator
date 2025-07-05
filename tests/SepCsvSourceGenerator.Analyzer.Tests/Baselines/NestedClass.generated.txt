@@ -10,7 +10,7 @@ namespace Test
     {
         public partial class NestedClass
         {
-            public async static partial global::System.Collections.Generic.IAsyncEnumerable<global::Test.OuterClass.NestedClass> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
+            public static async partial global::System.Collections.Generic.IAsyncEnumerable<global::Test.OuterClass.NestedClass> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
             {
                 int NameNdx;
 

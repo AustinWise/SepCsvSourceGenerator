@@ -107,7 +107,24 @@ public partial class CsvGenerator
         {
             var itemTypeName = methodDef.ItemTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-            _builder.Append(baseIndent).AppendLine($"public async static partial global::System.Collections.Generic.IAsyncEnumerable<{itemTypeName}> {methodDef.MethodSymbol.Name}(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)")
+            // Build the method modifiers by inspecting the symbol
+            var modifiers = new List<string>();
+            modifiers.Add(SyntaxFacts.GetText(methodDef.MethodSymbol.DeclaredAccessibility));
+            if (methodDef.MethodSymbol.IsStatic)
+            {
+                modifiers.Add("static");
+            }
+            if (methodDef.MethodSymbol.IsOverride)
+            {
+                modifiers.Add("override");
+            }
+            // The 'async' keyword is not a modifier in the traditional sense for symbols, so we add it manually.
+            modifiers.Add("async");
+            modifiers.Add("partial");
+
+            _builder.Append(baseIndent).Append(string.Join(" ", modifiers))
+                    .Append($" global::System.Collections.Generic.IAsyncEnumerable<{itemTypeName}> {methodDef.MethodSymbol.Name}(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)")
+                    .AppendLine()
                     .Append(baseIndent).AppendLine("{");
 
             string indent = baseIndent + "    ";

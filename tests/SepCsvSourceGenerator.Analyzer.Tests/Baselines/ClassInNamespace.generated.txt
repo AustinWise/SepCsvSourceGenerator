@@ -8,7 +8,7 @@ namespace My.Awesome.Namespace
 {
     public partial class MyRecordInNamespace
     {
-        public async static partial global::System.Collections.Generic.IAsyncEnumerable<global::My.Awesome.Namespace.MyRecordInNamespace> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
+        public static async partial global::System.Collections.Generic.IAsyncEnumerable<global::My.Awesome.Namespace.MyRecordInNamespace> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
         {
             int NameNdx;
 
