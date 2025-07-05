@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace SepCsvSourceGenerator;
@@ -64,65 +65,73 @@ public partial class CsvGenerator
                 }
 
                 var propertiesToParse = new List<CsvPropertyDefinition>();
-                foreach (var member in itemTypeSymbol.GetMembers())
+                var currentType = itemTypeSymbol;
+                var seenProperties = new HashSet<string>();
+
+                while (currentType != null && currentType.SpecialType != SpecialType.System_Object)
                 {
-                    if (member is not IPropertySymbol propertySymbol) continue;
-                    if (propertySymbol.IsStatic || propertySymbol.SetMethod == null) continue; // Must be instance property with a setter/init
-
-                    AttributeData? headerAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
-                        SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvHeaderNameAttributeSymbol));
-
-                    if (headerAttr == null || headerAttr.ConstructorArguments.Length == 0) continue;
-
-                    string? headerName = headerAttr.ConstructorArguments[0].Value as string;
-                    if (string.IsNullOrWhiteSpace(headerName))
+                    foreach (var member in currentType.GetMembers())
                     {
-                        Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidHeaderName, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name));
-                        continue;
-                    }
+                        if (member is not IPropertySymbol propertySymbol) continue;
+                        if (propertySymbol.IsStatic || propertySymbol.SetMethod == null) continue; // Must be instance property with a setter/init
+                        if (!seenProperties.Add(propertySymbol.Name)) continue; // Property already seen in a more derived type
 
-                    string? dateFormat = null;
-                    bool isDateTime = SymbolEqualityComparer.Default.Equals(propertySymbol.Type.OriginalDefinition, _dateTimeSymbol) ||
-                                      (propertySymbol.Type is INamedTypeSymbol ntsDateTime && ntsDateTime.IsGenericType &&
-                                       SymbolEqualityComparer.Default.Equals(ntsDateTime.TypeArguments.FirstOrDefault()?.OriginalDefinition, _dateTimeSymbol) &&
-                                       SymbolEqualityComparer.Default.Equals(ntsDateTime.OriginalDefinition, _nullableSymbol));
+                        AttributeData? headerAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
+                            SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvHeaderNameAttributeSymbol));
 
-                    if (isDateTime)
-                    {
-                        AttributeData? dateFormatAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
-                            SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvDateFormatAttributeSymbol));
-                        if (dateFormatAttr == null || dateFormatAttr.ConstructorArguments.Length == 0 ||
-                            string.IsNullOrWhiteSpace(dateFormatAttr.ConstructorArguments[0].Value as string))
+                        if (headerAttr == null || headerAttr.ConstructorArguments.Length == 0) continue;
+
+                        string? headerName = headerAttr.ConstructorArguments[0].Value as string;
+                        if (string.IsNullOrWhiteSpace(headerName))
                         {
-                            Diag(Diagnostic.Create(DiagnosticDescriptors.MissingDateFormatAttribute, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name));
-                            continue; // Skip this property if DateTime and no format
+                            Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidHeaderName, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name));
+                            continue;
                         }
-                        dateFormat = dateFormatAttr.ConstructorArguments[0].Value as string;
+
+                        string? dateFormat = null;
+                        bool isDateTime = SymbolEqualityComparer.Default.Equals(propertySymbol.Type.OriginalDefinition, _dateTimeSymbol) ||
+                                          (propertySymbol.Type is INamedTypeSymbol ntsDateTime && ntsDateTime.IsGenericType &&
+                                           SymbolEqualityComparer.Default.Equals(ntsDateTime.TypeArguments.FirstOrDefault()?.OriginalDefinition, _dateTimeSymbol) &&
+                                           SymbolEqualityComparer.Default.Equals(ntsDateTime.OriginalDefinition, _nullableSymbol));
+
+                        if (isDateTime)
+                        {
+                            AttributeData? dateFormatAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
+                                SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvDateFormatAttributeSymbol));
+                            if (dateFormatAttr == null || dateFormatAttr.ConstructorArguments.Length == 0 ||
+                                string.IsNullOrWhiteSpace(dateFormatAttr.ConstructorArguments[0].Value as string))
+                            {
+                                Diag(Diagnostic.Create(DiagnosticDescriptors.MissingDateFormatAttribute, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name));
+                                continue; // Skip this property if DateTime and no format
+                            }
+                            dateFormat = dateFormatAttr.ConstructorArguments[0].Value as string;
+                        }
+
+                        bool isRequired = propertySymbol.IsRequired; // For 'required' keyword
+
+                        // TODO: this is checking for both nullable value types and nullable reference types. Ensure this is what we want.
+                        // Or delete if we never end up using it.
+                        bool isNullableType = propertySymbol.Type.NullableAnnotation == NullableAnnotation.Annotated ||
+                                              (propertySymbol.Type is INamedTypeSymbol nts && nts.IsGenericType &&
+                                               SymbolEqualityComparer.Default.Equals(nts.OriginalDefinition, _nullableSymbol));
+
+                        ITypeSymbol underlyingType = (isNullableType && propertySymbol.Type is INamedTypeSymbol ntsNullable && ntsNullable.IsGenericType)
+                                                   ? ntsNullable.TypeArguments[0]
+                                                   : propertySymbol.Type;
+
+                        propertiesToParse.Add(new CsvPropertyDefinition(
+                            propertySymbol.Name,
+                            propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                            underlyingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                            headerName!,
+                            dateFormat,
+                            isRequired,
+                            isNullableType,
+                            isDateTime,
+                            SymbolEqualityComparer.Default.Equals(underlyingType.OriginalDefinition, _stringSymbol)
+                        ));
                     }
-
-                    bool isRequired = propertySymbol.IsRequired; // For 'required' keyword
-
-                    // TODO: this is checking for both nullable value types and nullable reference types. Ensure this is what we want.
-                    // Or delete if we never end up using it.
-                    bool isNullableType = propertySymbol.Type.NullableAnnotation == NullableAnnotation.Annotated ||
-                                          (propertySymbol.Type is INamedTypeSymbol nts && nts.IsGenericType &&
-                                           SymbolEqualityComparer.Default.Equals(nts.OriginalDefinition, _nullableSymbol));
-
-                    ITypeSymbol underlyingType = (isNullableType && propertySymbol.Type is INamedTypeSymbol ntsNullable && ntsNullable.IsGenericType)
-                                               ? ntsNullable.TypeArguments[0]
-                                               : propertySymbol.Type;
-
-                    propertiesToParse.Add(new CsvPropertyDefinition(
-                        propertySymbol.Name,
-                        propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                        underlyingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                        headerName!,
-                        dateFormat,
-                        isRequired,
-                        isNullableType,
-                        isDateTime,
-                        SymbolEqualityComparer.Default.Equals(underlyingType.OriginalDefinition, _stringSymbol)
-                    ));
+                    currentType = currentType.BaseType;
                 }
 
                 results.Add(new CsvMethodDefinition(methodSymbol, containingClassSymbol, itemTypeSymbol, [.. propertiesToParse]));

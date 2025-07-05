@@ -33,6 +33,36 @@ namespace Test
         }
 
         [Fact]
+        public void Emitter_GeneratesCorrectCode_ForPropertyInBaseClass()
+        {
+            var source = @"
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using SepCsvSourceGenerator;
+using nietras.SeparatedValues;
+
+namespace Test
+{
+    public class BaseRecord
+    {
+        [CsvHeaderName(""BaseName"")]
+        public required string BaseName { get; init; }
+    }
+    public partial class DerivedRecord : BaseRecord
+    {
+        [CsvHeaderName(""DerivedName"")]
+        public required string DerivedName { get; init; }
+
+        [GenerateCsvParser]
+        public static partial IAsyncEnumerable<DerivedRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+    }
+}
+";
+            RunTestAsync(source, "PropertyInBaseClass.generated.txt");
+        }
+
+        [Fact]
         public void Emitter_GeneratesCorrectCode_ForClassInNamespace()
         {
             var source = @"
