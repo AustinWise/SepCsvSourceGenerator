@@ -13,6 +13,10 @@ public partial class CsvGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+        context.RegisterPostInitializationOutput(static spc =>
+        {
+            spc.AddEmbeddedAttributeDefinition();
+        });
         IncrementalValuesProvider<MethodDeclarationSyntax> methodDeclarations = context.SyntaxProvider
             .ForAttributeWithMetadataName(
                 GenerateCsvParserAttributeFullName,

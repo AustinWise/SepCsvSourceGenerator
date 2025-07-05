@@ -183,7 +183,7 @@ namespace Test
 ";
             }
 
-            Assembly[]? refs = null;
+            Assembly[]? refs;
             if (includeRefs)
             {
                 refs =

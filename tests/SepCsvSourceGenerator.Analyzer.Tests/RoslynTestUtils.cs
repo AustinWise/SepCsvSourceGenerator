@@ -19,7 +19,10 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
             var (outputCompilation, generatorDiagnostics) = RunGenerator(compilation, generator, cancellationToken);
             var generatedSources = outputCompilation.SyntaxTrees
                 .Where(t => !compilation.SyntaxTrees.Any(t2 => t2.FilePath == t.FilePath))
-                .Select(t => new GeneratedSourceResult(t, t.GetText(cancellationToken).ToString()))
+                .Select(t => new GeneratedSourceResult(
+                    Path.GetFileName(t.FilePath),
+                    t,
+                    t.GetText(cancellationToken).ToString()))
                 .ToImmutableArray();
 
             return (generatorDiagnostics, generatedSources);
@@ -63,5 +66,5 @@ namespace SepCsvSourceGenerator.Analyzer.Tests
         }
     }
 
-    internal record GeneratedSourceResult(SyntaxTree SyntaxTree, string Source);
+    internal record GeneratedSourceResult(string HintName, SyntaxTree SyntaxTree, string Source);
 }

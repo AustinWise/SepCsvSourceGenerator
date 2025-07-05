@@ -232,7 +232,9 @@ namespace Test
                 [source]);
 
             Assert.Empty(diagnostics);
-            Assert.Single(generatedSources);
+            Assert.Equal(2, generatedSources.Length);
+
+            var generatedParser = generatedSources.First(s => s.HintName.EndsWith(".CsvGenerator.g.cs"));
 
             if (s_generateBaselines)
             {
@@ -246,14 +248,14 @@ namespace Test
                 {
                     throw new Exception("Could not find the Baselines directory.");
                 }
-                await File.WriteAllTextAsync(Path.Combine(directory, "Baselines", baselineFileName), generatedSources[0].Source);
+                await File.WriteAllTextAsync(Path.Combine(directory, "Baselines", baselineFileName), generatedParser.Source);
             }
             else
             {
                 var baseline = await File.ReadAllTextAsync(Path.Combine("Baselines", baselineFileName));
 
                 var expected = baseline.ReplaceLineEndings();
-                var actual = generatedSources[0].Source.ReplaceLineEndings();
+                var actual = generatedParser.Source.ReplaceLineEndings();
 
                 Assert.Equal(expected, actual);
             }
