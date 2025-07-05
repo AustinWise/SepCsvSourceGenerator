@@ -1,3 +1,4 @@
+
 using nietras.SeparatedValues;
 
 namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests
@@ -5,6 +6,32 @@ namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests
     public class CsvGeneratorEmitterTests
     {
         private static readonly bool s_generateBaselines = Environment.GetEnvironmentVariable("GENERATE_BASELINES")?.ToLowerInvariant() is "true" or "1";
+
+        [Fact]
+        public void Emitter_GeneratesCorrectCode_ForEnumProperty()
+        {
+            var source = @"
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using US.AWise.SepCsvSourceGenerator;
+using nietras.SeparatedValues;
+
+namespace Test
+{
+    public enum MyEnum { A, B, C }
+    public partial class MyRecord
+    {
+        [CsvHeaderName(""Status"")]
+        public MyEnum Status { get; set; }
+
+        [GenerateCsvParser]
+        public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+    }
+}
+";
+            RunTestAsync(source, "EnumProperty.generated.txt");
+        }
 
         [Fact]
         public void Emitter_GeneratesCorrectCode_ForDateTimeProperty()

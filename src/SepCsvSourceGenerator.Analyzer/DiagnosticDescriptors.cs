@@ -5,8 +5,8 @@ namespace US.AWise.SepCsvSourceGenerator.Analyzer;
 // TODO: consider adding support for localization.
 internal static class DiagnosticDescriptors
 {
-    public static readonly DiagnosticDescriptor MethodNotPartialStatic =
-        new("CSVGEN001", "Method must be partial and static", "Method '{0}' must be declared as 'partial static'", "Usage", DiagnosticSeverity.Error, true);
+    public static readonly DiagnosticDescriptor MethodNotPartial =
+        new("CSVGEN001", "Method must be partial and static", "Method '{0}' must be declared as 'partial'", "Usage", DiagnosticSeverity.Error, true);
     public static readonly DiagnosticDescriptor InvalidReturnType =
         new("CSVGEN002", "Invalid return type", "Method must return 'IAsyncEnumerable<{0}>' or 'IEnumerable<{0}>'", "Usage", DiagnosticSeverity.Error, true);
     public static readonly DiagnosticDescriptor InvalidMethodParameters =

@@ -227,6 +227,10 @@ public partial class CsvGenerator
             {
                 return $"{spanAccess}.ToString()";
             }
+            if (prop.IsEnum)
+            {
+                return $"global::System.Enum.Parse<{prop.UnderlyingTypeName}>({spanAccess})";
+            }
             // Assumed ISpanParsable or similar static Parse for others
             return $"{prop.UnderlyingTypeName}.Parse({spanAccess}, CultureInfo.InvariantCulture)";
         }

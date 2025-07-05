@@ -23,6 +23,7 @@ public partial class CsvGenerator
         private readonly INamedTypeSymbol? _dateTimeSymbol = compilation.GetSpecialType(SpecialType.System_DateTime);
         private readonly INamedTypeSymbol? _stringSymbol = compilation.GetSpecialType(SpecialType.System_String);
         private readonly INamedTypeSymbol? _nullableSymbol = compilation.GetSpecialType(SpecialType.System_Nullable_T);
+        private readonly INamedTypeSymbol? _enumSymbol = compilation.GetTypeByMetadataName("System.Enum");
 
         public List<CsvMethodDefinition> GetCsvMethodDefinitions(ImmutableArray<MethodDeclarationSyntax> methods)
         {
@@ -30,7 +31,7 @@ public partial class CsvGenerator
 
             if (_generateCsvParserAttributeSymbol == null || _csvHeaderNameAttributeSymbol == null || _csvDateFormatAttributeSymbol == null ||
                 _sepReaderSymbol == null || _iAsyncEnumerableSymbol == null || _iEnumerableSymbol == null || _cancellationTokenSymbol == null || _dateTimeSymbol == null ||
-                _stringSymbol == null || _nullableSymbol == null)
+                _stringSymbol == null || _nullableSymbol == null || _enumSymbol == null)
             {
                 // TODO: consider reintroducing this diagnostic. Currently we include our attributes in the compilation,
                 // so it is unlikely that our attributes will be missing. A more likely scenario is that the user is targeting an unsupported framework
@@ -125,6 +126,8 @@ public partial class CsvGenerator
                                                    ? ntsNullable.TypeArguments[0]
                                                    : propertySymbol.Type;
 
+                        bool isEnum = underlyingType.BaseType != null && SymbolEqualityComparer.Default.Equals(underlyingType.BaseType, _enumSymbol);
+
                         propertiesToParse.Add(new CsvPropertyDefinition(
                             propertySymbol.Name,
                             propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
@@ -134,7 +137,8 @@ public partial class CsvGenerator
                             isRequired,
                             isNullableType,
                             isDateTime,
-                            SymbolEqualityComparer.Default.Equals(underlyingType.OriginalDefinition, _stringSymbol)
+                            SymbolEqualityComparer.Default.Equals(underlyingType.OriginalDefinition, _stringSymbol),
+                            isEnum
                         ));
                     }
                     currentType = currentType.BaseType;
@@ -166,7 +170,7 @@ public partial class CsvGenerator
             bool isValid = true;
             if (!methodSymbol.IsPartialDefinition)
             {
-                Diag(Diagnostic.Create(DiagnosticDescriptors.MethodNotPartialStatic, methodSyntax.Identifier.GetLocation()));
+                Diag(Diagnostic.Create(DiagnosticDescriptors.MethodNotPartial, methodSyntax.Identifier.GetLocation(), methodSymbol.Name));
                 isValid = false;
             }
 
@@ -219,6 +223,7 @@ public partial class CsvGenerator
             bool IsRequiredMember,
             bool IsNullableType,
             bool IsDateTime,
-            bool IsString);
+            bool IsString,
+            bool IsEnum);
     }
 }
