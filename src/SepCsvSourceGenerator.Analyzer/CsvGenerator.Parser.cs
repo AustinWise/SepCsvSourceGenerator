@@ -29,7 +29,7 @@ public partial class CsvGenerator
 
             if (_generateCsvParserAttributeSymbol == null || _csvHeaderNameAttributeSymbol == null || _csvDateFormatAttributeSymbol == null ||
                 _sepReaderSymbol == null || _iAsyncEnumerableSymbol == null || _cancellationTokenSymbol == null || _dateTimeSymbol == null ||
-                _stringSymbol == null  || _nullableSymbol == null)
+                _stringSymbol == null || _nullableSymbol == null)
             {
                 Diag(Diagnostic.Create(DiagnosticDescriptors.EssentialTypesNotFound, methods[0].GetLocation()));
                 return results;
