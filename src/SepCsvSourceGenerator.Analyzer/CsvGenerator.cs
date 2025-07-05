@@ -40,14 +40,6 @@ public partial class CsvGenerator : IIncrementalGenerator
                     }
 
                     [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
-                    [global::System.AttributeUsage(global::System.AttributeTargets.Property | global::System.AttributeTargets.Field, AllowMultiple = false)]
-                    public sealed class CsvIgnoreAttribute : CsvAttribute { }
-
-                    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
-                    [global::System.AttributeUsage(global::System.AttributeTargets.Property | global::System.AttributeTargets.Field, AllowMultiple = false)]
-                    public sealed class CsvIncludeAttribute : CsvAttribute { }
-
-                    [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
                     [global::System.AttributeUsage(global::System.AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
                     public sealed class GenerateCsvParserAttribute : CsvAttribute
                     {
