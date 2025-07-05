@@ -8,7 +8,7 @@ namespace Test
 {
     public partial class MyRecordWithIgnored
     {
-        public async static partial global::System.Collections.Generic.IAsyncEnumerable<MyRecordWithIgnored> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
+        public async static partial global::System.Collections.Generic.IAsyncEnumerable<global::Test.MyRecordWithIgnored> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
         {
             int NameNdx;
 
@@ -25,7 +25,7 @@ namespace Test
             {
                 ct.ThrowIfCancellationRequested();
 
-                MyRecordWithIgnored ret = new MyRecordWithIgnored();
+                global::Test.MyRecordWithIgnored ret = new global::Test.MyRecordWithIgnored();
                 if (NameNdx != -1)
                 {
                     ret.Name = row[NameNdx].Span.ToString();

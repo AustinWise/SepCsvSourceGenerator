@@ -105,11 +105,7 @@ public partial class CsvGenerator
 
         private void GenerateMethod(Parser.CsvMethodDefinition methodDef, string baseIndent)
         {
-            var itemTypeName = methodDef.ItemTypeSymbol.Name; // Assuming no generics on item type for simplicity here
-            if (methodDef.ItemTypeSymbol.TypeParameters.Any())
-            {
-                itemTypeName = methodDef.ItemTypeSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
-            }
+            var itemTypeName = methodDef.ItemTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
             _builder.Append(baseIndent).AppendLine($"public async static partial global::System.Collections.Generic.IAsyncEnumerable<{itemTypeName}> {methodDef.MethodSymbol.Name}(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)")
                     .Append(baseIndent).AppendLine("{");

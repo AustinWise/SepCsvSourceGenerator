@@ -8,13 +8,13 @@ namespace Test
 {
     public partial class MyRecordWithRequired
     {
-        public async static partial global::System.Collections.Generic.IAsyncEnumerable<MyRecordWithRequired> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
+        public async static partial global::System.Collections.Generic.IAsyncEnumerable<global::Test.MyRecordWithRequired> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
         {
             int NameNdx;
 
             if (!reader.Header.TryIndexOf("Name", out NameNdx))
             {
-                throw new global::System.ArgumentException($"Missing required column 'Name' for required member 'MyRecordWithRequired.Name'.");
+                throw new global::System.ArgumentException($"Missing required column 'Name' for required member 'global::Test.MyRecordWithRequired.Name'.");
             }
 
             await foreach (SepReader.Row row in reader
@@ -25,7 +25,7 @@ namespace Test
             {
                 ct.ThrowIfCancellationRequested();
 
-                MyRecordWithRequired ret = new MyRecordWithRequired()
+                global::Test.MyRecordWithRequired ret = new global::Test.MyRecordWithRequired()
                 {
                     Name = row[NameNdx].Span.ToString()
                 };

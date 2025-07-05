@@ -8,7 +8,7 @@ namespace Test
 {
     public partial class MyRecord
     {
-        public async static partial global::System.Collections.Generic.IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
+        public async static partial global::System.Collections.Generic.IAsyncEnumerable<global::Test.MyRecord> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
         {
             int NameNdx;
             int DateNdx;
@@ -35,7 +35,7 @@ namespace Test
             {
                 ct.ThrowIfCancellationRequested();
 
-                MyRecord ret = new MyRecord();
+                global::Test.MyRecord ret = new global::Test.MyRecord();
                 if (NameNdx != -1)
                 {
                     ret.Name = row[NameNdx].Span.ToString();
