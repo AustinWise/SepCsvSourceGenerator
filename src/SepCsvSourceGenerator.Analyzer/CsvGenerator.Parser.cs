@@ -142,6 +142,8 @@ public partial class CsvGenerator
 
                 if (seenProperties.Count == 0)
                 {
+                    // We did not see any properties marked with the CsvHeaderName attribute.
+                    // That's was probably a mistake.
                     Diag(Diagnostic.Create(DiagnosticDescriptors.NoPropertiesFound, methodSyntax.Identifier.GetLocation(), itemTypeSymbol.Name));
                     continue;
                 }

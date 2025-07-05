@@ -18,5 +18,5 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor InvalidHeaderName =
         new("CSVGEN006", "Invalid header name", "Property '{0}' has an invalid [CsvHeaderName] attribute. The header name cannot be null or whitespace.", "Usage", DiagnosticSeverity.Error, true);
     public static readonly DiagnosticDescriptor NoPropertiesFound =
-        new("CSVGEN007", "No properties to parse", "The type '{0}' does not have any properties with the [CsvHeaderName] attribute.", "Usage", DiagnosticSeverity.Error, true);
+        new("CSVGEN007", "No properties to parse", "The type '{0}' does not have any properties with the [CsvHeaderName] attribute", "Usage", DiagnosticSeverity.Warning, true);
 }

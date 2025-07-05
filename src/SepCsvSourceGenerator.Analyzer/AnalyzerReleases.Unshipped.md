@@ -1,5 +1,5 @@
 ﻿; Unshipped analyzer release
-https://github.com/dotnet/roslyn/blob/main/src/RoslynAnalyzers/Microsoft.CodeAnalysis.Analyzers/ReleaseTrackingAnalyzers.Help.md
+; https://github.com/dotnet/roslyn/blob/main/src/RoslynAnalyzers/Microsoft.CodeAnalysis.Analyzers/ReleaseTrackingAnalyzers.Help.md
 
 ### New Rules
 
@@ -11,3 +11,4 @@ CSVGEN003 | Usage | Error | DiagnosticDescriptors
 CSVGEN004 | Usage | Error | DiagnosticDescriptors
 CSVGEN005 | Usage | Error | DiagnosticDescriptors
 CSVGEN006 | Usage | Error | DiagnosticDescriptors
+CSVGEN007 | Usage | Warning | DiagnosticDescriptors
