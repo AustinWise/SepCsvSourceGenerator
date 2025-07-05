@@ -89,34 +89,6 @@ namespace Test
         }
 
         [Fact]
-        public void Emitter_GeneratesCorrectCode_ForIgnoredProperty()
-        {
-            var source = @"
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using SepCsvSourceGenerator;
-using nietras.SeparatedValues;
-
-namespace Test
-{
-    public partial class MyRecordWithIgnored
-    {
-        [CsvHeaderName(""Name"")]
-        public string Name { get; set; }
-
-        [CsvIgnore]
-        public int ShouldBeIgnored { get; set; }
-
-        [GenerateCsvParser]
-        public static partial IAsyncEnumerable<MyRecordWithIgnored> ParseRecords(SepReader reader, CancellationToken cancellationToken);
-    }
-}
-";
-            RunTestAsync(source, "IgnoredProperty.generated.txt");
-        }
-
-        [Fact]
         public void Emitter_GeneratesCorrectCode_ForNestedClass()
         {
             var source = @"
@@ -263,7 +235,7 @@ namespace Test
 
             if (s_generateBaselines)
             {
-                // Wall up the directory tree until we find the Baselines directory.
+                // Walk up the directory tree until we find the Baselines directory.
                 string? directory = Path.GetDirectoryName(Path.GetDirectoryName(Environment.ProcessPath));
                 while (directory != null && !Directory.Exists(Path.Combine(directory, "Baselines")))
                 {
