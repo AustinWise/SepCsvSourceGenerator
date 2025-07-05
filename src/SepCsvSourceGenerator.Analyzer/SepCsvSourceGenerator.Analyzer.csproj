@@ -7,6 +7,7 @@
         <ImplicitUsings>true</ImplicitUsings>
         <LangVersion>13</LangVersion>
         <RootNamespace>US.AWise.SepCsvSourceGenerator</RootNamespace>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
     </PropertyGroup>
 
     <ItemGroup>
