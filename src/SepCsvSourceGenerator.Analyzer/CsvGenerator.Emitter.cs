@@ -35,29 +35,6 @@ public partial class CsvGenerator
             _builder.AppendLine(line);
         }
 
-        public static string GetHintName(INamedTypeSymbol classSymbol)
-        {
-            // Create a unique file name, e.g., Namespace.ClassName.CsvGenerator.g.cs
-            // Replace invalid filename characters from namespace and class name
-            var parts = new List<string>();
-            if (!classSymbol.ContainingNamespace.IsGlobalNamespace)
-            {
-                parts.Add(SanitizeFileName(classSymbol.ContainingNamespace.ToDisplayString()));
-            }
-
-            var typeHierarchy = new Stack<string>();
-            INamedTypeSymbol? current = classSymbol;
-            while (current != null)
-            {
-                typeHierarchy.Push(SanitizeFileName(current.Name));
-                current = current.ContainingType;
-            }
-            parts.AddRange(typeHierarchy);
-            return string.Join(".", parts) + ".CsvGenerator.g.cs";
-        }
-
-        private static string SanitizeFileName(string name) => name.Replace("<", "_").Replace(">", "_").Replace("?", "_").Replace("*", "_");
-
         public string? Emit(INamedTypeSymbol containingClassSymbol, List<Parser.CsvMethodDefinition> methodsToGenerate, CancellationToken cancellationToken)
         {
             _builder.Clear();
