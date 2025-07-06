@@ -75,7 +75,7 @@ public partial class CsvGenerator : IIncrementalGenerator
 
         if (csvMethodsToGenerate.Count > 0)
         {
-            var emitter = new Emitter(context.ReportDiagnostic);
+            var emitter = new Emitter();
             var methodsByClass = csvMethodsToGenerate.GroupBy(m => m.ContainingClassSymbol, SymbolEqualityComparer.Default);
 
             foreach (var group in methodsByClass)

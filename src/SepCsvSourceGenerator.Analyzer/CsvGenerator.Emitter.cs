@@ -6,9 +6,8 @@ namespace US.AWise.SepCsvSourceGenerator.Analyzer;
 
 public partial class CsvGenerator
 {
-    internal sealed class Emitter(Action<Diagnostic> reportDiagnostic)
+    internal sealed class Emitter
     {
-        private readonly Action<Diagnostic> _reportDiagnostic = reportDiagnostic;
         private readonly StringBuilder _builder = new();
 
         public static string GetHintName(INamedTypeSymbol classSymbol)
@@ -68,11 +67,11 @@ public partial class CsvGenerator
                 var classToDeclare = classStack.Pop();
                 _builder.Append(indent).Append(SyntaxFacts.GetText(classToDeclare.DeclaredAccessibility)).Append(" partial ")
                        .Append(classToDeclare.IsRecord ? "record " : "") // Handle records
-                       .Append(classToDeclare.TypeKind.ToString().ToLowerInvariant()).Append(" ") // class, struct, interface
+                       .Append(classToDeclare.TypeKind.ToString().ToLowerInvariant()).Append(' ') // class, struct, interface
                        .Append(classToDeclare.Name);
                 if (classToDeclare.TypeParameters.Any())
                 {
-                    _builder.Append("<").Append(string.Join(", ", classToDeclare.TypeParameters.Select(tp => tp.Name))).Append(">");
+                    _builder.Append('<').Append(string.Join(", ", classToDeclare.TypeParameters.Select(tp => tp.Name))).Append('>');
                 }
                 _builder.AppendLine();
                 _builder.Append(indent).AppendLine("{");
@@ -108,8 +107,10 @@ public partial class CsvGenerator
             var itemTypeName = methodDef.ItemTypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
             // Build the method modifiers by inspecting the symbol
-            var modifiers = new List<string>();
-            modifiers.Add(SyntaxFacts.GetText(methodDef.MethodSymbol.DeclaredAccessibility));
+            var modifiers = new List<string>
+            {
+                SyntaxFacts.GetText(methodDef.MethodSymbol.DeclaredAccessibility)
+            };
             if (methodDef.MethodSymbol.IsStatic)
             {
                 modifiers.Add("static");
@@ -184,7 +185,7 @@ public partial class CsvGenerator
             _builder.Append(innerIndent).Append($"{itemTypeName} ret = new {itemTypeName}()");
 
             var requiredProps = methodDef.PropertiesToParse.Where(p => p.IsRequiredMember).ToList();
-            if (requiredProps.Any())
+            if (requiredProps.Count != 0)
             {
                 _builder.AppendLine();
                 _builder.Append(innerIndent).AppendLine("{");
@@ -216,7 +217,7 @@ public partial class CsvGenerator
             _builder.Append(baseIndent).AppendLine("}"); // end method
         }
 
-        private string GetParseExpression(Parser.CsvPropertyDefinition prop, string indexVarName)
+        private static string GetParseExpression(Parser.CsvPropertyDefinition prop, string indexVarName)
         {
             string spanAccess = $"row[{indexVarName}].Span";
             if (prop.IsDateTime)

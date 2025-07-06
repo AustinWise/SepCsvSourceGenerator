@@ -8,6 +8,7 @@
         <LangVersion>13</LangVersion>
         <RootNamespace>US.AWise.SepCsvSourceGenerator</RootNamespace>
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <AnalysisLevel>latest</AnalysisLevel>
     </PropertyGroup>
 
     <ItemGroup>
