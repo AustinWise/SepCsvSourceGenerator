@@ -14,7 +14,7 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor MissingDateFormatAttribute =
         new("CSVGEN004", "Missing CsvDateFormat attribute", "Property '{0}' of type DateTime or DateTime? must have a [CsvDateFormat] attribute", "Usage", DiagnosticSeverity.Error, true);
     public static readonly DiagnosticDescriptor EssentialTypesNotFound =
-        new("CSVGEN005", "Essential types not found", "Essential types for source generation were not found. Please ensure the SepCsvSourceGenerator.Attributes nuget package is referenced.", "Usage", DiagnosticSeverity.Error, true);
+        new("CSVGEN005", "Essential types not found", "Essential types for source generation were not found: {0}", "Usage", DiagnosticSeverity.Error, true);
     public static readonly DiagnosticDescriptor InvalidHeaderName =
         new("CSVGEN006", "Invalid header name", "Property '{0}' has an invalid [CsvHeaderName] attribute. The header name cannot be null or whitespace.", "Usage", DiagnosticSeverity.Error, true);
     public static readonly DiagnosticDescriptor NoPropertiesFound =

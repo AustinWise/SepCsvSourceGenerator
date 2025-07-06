@@ -2,6 +2,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace US.AWise.SepCsvSourceGenerator.Analyzer;
 
@@ -25,18 +27,22 @@ public partial class CsvGenerator
         private readonly INamedTypeSymbol? _nullableSymbol = compilation.GetSpecialType(SpecialType.System_Nullable_T);
         private readonly INamedTypeSymbol? _enumSymbol = compilation.GetTypeByMetadataName("System.Enum");
 
+        private static string reformatFieldName(string fieldName)
+        {
+            fieldName = fieldName.Remove(fieldName.Length - "Symbol".Length);
+            fieldName = char.ToUpperInvariant(fieldName[1]) + fieldName.Substring(2);
+            return fieldName;
+        }
+
         public List<CsvMethodDefinition> GetCsvMethodDefinitions(ImmutableArray<MethodDeclarationSyntax> methods)
         {
             var results = new List<CsvMethodDefinition>();
 
-            if (_generateCsvParserAttributeSymbol == null || _csvHeaderNameAttributeSymbol == null || _csvDateFormatAttributeSymbol == null ||
-                _sepReaderSymbol == null || _iAsyncEnumerableSymbol == null || _iEnumerableSymbol == null || _cancellationTokenSymbol == null || _dateTimeSymbol == null ||
-                _stringSymbol == null || _nullableSymbol == null || _enumSymbol == null)
+            List<FieldInfo> nullFields = this.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance).Where(f => f.FieldType == typeof(INamedTypeSymbol) && f.GetValue(this) is null).ToList();
+            if (nullFields.Count != 0)
             {
-                // TODO: consider reintroducing this diagnostic. Currently we include our attributes in the compilation,
-                // so it is unlikely that our attributes will be missing. A more likely scenario is that the user is targeting an unsupported framework
-                // that is missing things like IAsyncEnumerable<T>.
-                //Diag(Diagnostic.Create(DiagnosticDescriptors.EssentialTypesNotFound, methods[0].GetLocation()));
+                string missingTypes = string.Join(", ", nullFields.Select(f => reformatFieldName(f.Name)));
+                Diag(Diagnostic.Create(DiagnosticDescriptors.EssentialTypesNotFound, methods[0].GetLocation(), missingTypes));
                 return results;
             }
 
@@ -46,6 +52,13 @@ public partial class CsvGenerator
                 SemanticModel semanticModel = _compilation.GetSemanticModel(methodSyntax.SyntaxTree);
                 if (semanticModel.GetDeclaredSymbol(methodSyntax, _cancellationToken) is not IMethodSymbol methodSymbol)
                 {
+                    continue;
+                }
+
+                if (!methodSymbol.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, _generateCsvParserAttributeSymbol)))
+                {
+                    // TODO: throw an exception or log a diagnostic? This should not happen.
+                    Debug.Fail("Method marked with [GenerateCsvParser] should not be processed here.");
                     continue;
                 }
 
