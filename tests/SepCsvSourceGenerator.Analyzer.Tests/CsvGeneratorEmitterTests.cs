@@ -265,7 +265,6 @@ public partial class MyGlobalRecord : MyBaseClass
         [Fact]
         public void Emitter_GeneratesCorrectCode_ForGenericClass()
         {
-            // TODO: make this only work when T is constrained to implement ISpanParsable.
             var source = @"
 using System;
 using System.Collections.Generic;

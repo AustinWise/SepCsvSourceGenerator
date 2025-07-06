@@ -12,3 +12,4 @@ CSVGEN004 | Usage | Error | DiagnosticDescriptors
 CSVGEN005 | Usage | Error | DiagnosticDescriptors
 CSVGEN006 | Usage | Error | DiagnosticDescriptors
 CSVGEN007 | Usage | Warning | DiagnosticDescriptors
+CSVGEN008 | Usage | Error | DiagnosticDescriptors

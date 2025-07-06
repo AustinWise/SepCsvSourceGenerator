@@ -19,4 +19,6 @@ internal static class DiagnosticDescriptors
         new("CSVGEN006", "Invalid header name", "Property '{0}' has an invalid [CsvHeaderName] attribute. The header name cannot be null or whitespace.", "Usage", DiagnosticSeverity.Error, true);
     public static readonly DiagnosticDescriptor NoPropertiesFound =
         new("CSVGEN007", "No properties to parse", "The type '{0}' does not have any properties with the [CsvHeaderName] attribute", "Usage", DiagnosticSeverity.Warning, true);
+    public static readonly DiagnosticDescriptor PropertyNotParsable =
+        new("CSVGEN008", "Property not parsable", "Property '{0}' of type '{1}' is not parsable. It must be an enum or implement ISpanParsable<T>.", "Usage", DiagnosticSeverity.Error, true);
 }

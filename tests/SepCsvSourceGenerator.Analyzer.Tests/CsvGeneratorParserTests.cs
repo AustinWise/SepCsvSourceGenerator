@@ -182,6 +182,26 @@ namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests
             Assert.Equal("Essential types for source generation were not found: SepReader", diagnostics[0].GetMessage());
         }
 
+        [Fact]
+        public void PropertyNotParsable()
+        {
+            var diagnostics = RunGenerator(@"
+                public class NotParsable { }
+
+                public partial class MyRecord
+                {
+                    [CsvHeaderName(""Value"")]
+                    public NotParsable Value { get; set; }
+
+                    [GenerateCsvParser]
+                    public static partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
+                }
+            ");
+
+            Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN008", diagnostics[0].Id);
+        }
+
         private static ImmutableArray<Diagnostic> RunGenerator(
             string code,
             bool wrap = true,

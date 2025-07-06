@@ -26,6 +26,7 @@ public partial class CsvGenerator
         private readonly INamedTypeSymbol? _stringSymbol = compilation.GetSpecialType(SpecialType.System_String);
         private readonly INamedTypeSymbol? _nullableSymbol = compilation.GetSpecialType(SpecialType.System_Nullable_T);
         private readonly INamedTypeSymbol? _enumSymbol = compilation.GetTypeByMetadataName("System.Enum");
+        private readonly INamedTypeSymbol? _iSpanParsableSymbol = compilation.GetTypeByMetadataName("System.ISpanParsable`1");
 
         private static string reformatFieldName(string fieldName)
         {
@@ -140,6 +141,18 @@ public partial class CsvGenerator
                                                    : propertySymbol.Type;
 
                         bool isEnum = underlyingType.BaseType != null && SymbolEqualityComparer.Default.Equals(underlyingType.BaseType, _enumSymbol);
+
+                        bool isSpanParsable = underlyingType.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, _iSpanParsableSymbol));
+                        if (!isSpanParsable && underlyingType is ITypeParameterSymbol typeParameter)
+                        {
+                            isSpanParsable = typeParameter.ConstraintTypes.SelectMany(t => t.AllInterfaces.Concat(new[] { t.OriginalDefinition as INamedTypeSymbol })).Any(i => SymbolEqualityComparer.Default.Equals(i?.OriginalDefinition, _iSpanParsableSymbol));
+                        }
+
+                        if (!isEnum && !isSpanParsable && !isDateTime)
+                        {
+                            Diag(Diagnostic.Create(DiagnosticDescriptors.PropertyNotParsable, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name, underlyingType.Name));
+                            continue;
+                        }
 
                         propertiesToParse.Add(new CsvPropertyDefinition(
                             propertySymbol.Name,
