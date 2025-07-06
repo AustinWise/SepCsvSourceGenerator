@@ -23,7 +23,11 @@ namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests
                     t.GetText().ToString()))
                 .ToImmutableArray();
 
-            return (generatorDiagnostics, generatedSources);
+            var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
+            diagnostics.AddRange(outputCompilation.GetDiagnostics().Where(d => d.DefaultSeverity >= DiagnosticSeverity.Warning));
+            diagnostics.AddRange(generatorDiagnostics);
+
+            return (diagnostics.ToImmutableArray(), generatedSources);
         }
 
         public static (Compilation, ImmutableArray<Diagnostic>) RunGenerator(Compilation compilation, IIncrementalGenerator generator)

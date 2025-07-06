@@ -245,7 +245,7 @@ using System.Threading;
 using US.AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
-public partial class MyBaseClass
+public abstract class MyBaseClass
 {
     protected abstract IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
 }
