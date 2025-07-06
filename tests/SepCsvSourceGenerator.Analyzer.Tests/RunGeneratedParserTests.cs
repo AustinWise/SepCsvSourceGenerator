@@ -2,7 +2,7 @@ using nietras.SeparatedValues;
 
 namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests;
 
-public partial class CsvGeneratorParsingTests
+public partial class RunGeneratedParserTests
 {
     public enum MyEnum { A, B, C }
     public class BaseRecord
