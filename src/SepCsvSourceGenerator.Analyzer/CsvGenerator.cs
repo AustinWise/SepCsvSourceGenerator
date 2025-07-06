@@ -21,11 +21,11 @@ public partial class CsvGenerator : IIncrementalGenerator
                 namespace US.AWise.SepCsvSourceGenerator
                 {
                     [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
-                    public abstract class CsvAttribute : global::System.Attribute { }
+                    internal abstract class CsvAttribute : global::System.Attribute { }
 
                     [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
                     [global::System.AttributeUsage(global::System.AttributeTargets.Property | global::System.AttributeTargets.Field, AllowMultiple = false)]
-                    public sealed class CsvDateFormatAttribute : CsvAttribute
+                    internal sealed class CsvDateFormatAttribute : CsvAttribute
                     {
                         public CsvDateFormatAttribute(string format) { Format = format; }
                         public string Format { get; }
@@ -33,7 +33,7 @@ public partial class CsvGenerator : IIncrementalGenerator
 
                     [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
                     [global::System.AttributeUsage(global::System.AttributeTargets.Property | global::System.AttributeTargets.Field, AllowMultiple = false)]
-                    public sealed class CsvHeaderNameAttribute : CsvAttribute
+                    internal sealed class CsvHeaderNameAttribute : CsvAttribute
                     {
                         public CsvHeaderNameAttribute(string name) { Name = name; }
                         public string Name { get; }
@@ -41,7 +41,7 @@ public partial class CsvGenerator : IIncrementalGenerator
 
                     [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
                     [global::System.AttributeUsage(global::System.AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
-                    public sealed class GenerateCsvParserAttribute : CsvAttribute
+                    internal sealed class GenerateCsvParserAttribute : CsvAttribute
                     {
                         public GenerateCsvParserAttribute()
                         {
