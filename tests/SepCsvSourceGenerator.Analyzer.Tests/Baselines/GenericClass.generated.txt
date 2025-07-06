@@ -23,9 +23,9 @@ namespace Test
             }
 
             await foreach (SepReader.Row row in reader
-            #if NET10_0_OR_GREATER
-            .WithCancellation(ct).ConfigureAwait(false)
-            #endif
+                #if NET10_0_OR_GREATER
+                .WithCancellation(ct).ConfigureAwait(false)
+                #endif
             )
             {
                 ct.ThrowIfCancellationRequested();
