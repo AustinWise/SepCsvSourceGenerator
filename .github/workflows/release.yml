@@ -29,4 +29,8 @@ jobs:
     - name: Push
       run: dotnet nuget push AWise.SepCsvSourceGenerator.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_API}
       env:
+        # get a new API key here:
+        # https://www.nuget.org/account/apikeys
+        # and put it here:
+        # https://github.com/AustinWise/SepCsvSourceGenerator/settings/secrets/actions
         NUGET_API: ${{ secrets.NUGET_API }}
