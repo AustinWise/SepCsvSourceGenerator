@@ -1,6 +1,7 @@
 using nietras.SeparatedValues;
+using AWise.SepCsvSourceGenerator;
 
-namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests;
+namespace AWise.SepCsvSourceGenerator.Analyzer.Tests;
 
 public partial class RunGeneratedParserTests
 {

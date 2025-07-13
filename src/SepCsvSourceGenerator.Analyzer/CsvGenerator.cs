@@ -4,12 +4,13 @@ using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
 using System.Text;
 
-namespace US.AWise.SepCsvSourceGenerator.Analyzer;
+namespace AWise.SepCsvSourceGenerator.Analyzer;
 
 [Generator]
 public partial class CsvGenerator : IIncrementalGenerator
 {
-    public const string GenerateCsvParserAttributeFullName = "US.AWise.SepCsvSourceGenerator.GenerateCsvParserAttribute";
+    const string GeneratorNamespace = "AWise.SepCsvSourceGenerator";
+    public const string GenerateCsvParserAttributeFullName = GeneratorNamespace + ".GenerateCsvParserAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -18,7 +19,7 @@ public partial class CsvGenerator : IIncrementalGenerator
             spc.AddEmbeddedAttributeDefinition();
             spc.AddSource("SepCsvSourceGenerator.Attributes.cs", SourceText.From(
                 """
-                namespace US.AWise.SepCsvSourceGenerator
+                namespace AWise.SepCsvSourceGenerator
                 {
                     [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
                     internal abstract class CsvAttribute : global::System.Attribute { }

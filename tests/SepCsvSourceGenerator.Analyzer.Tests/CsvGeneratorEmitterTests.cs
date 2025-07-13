@@ -1,7 +1,7 @@
 
 using nietras.SeparatedValues;
 
-namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests
+namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
 {
     public class CsvGeneratorEmitterTests
     {
@@ -14,7 +14,7 @@ namespace US.AWise.SepCsvSourceGenerator.Analyzer.Tests
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using US.AWise.SepCsvSourceGenerator;
+using AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
 namespace Test
@@ -40,7 +40,7 @@ namespace Test
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using US.AWise.SepCsvSourceGenerator;
+using AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
 namespace Test
@@ -66,7 +66,7 @@ namespace Test
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using US.AWise.SepCsvSourceGenerator;
+using AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
 namespace Test
@@ -96,7 +96,7 @@ namespace Test
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using US.AWise.SepCsvSourceGenerator;
+using AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
 namespace My.Awesome.Namespace
@@ -121,7 +121,7 @@ namespace My.Awesome.Namespace
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using US.AWise.SepCsvSourceGenerator;
+using AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
 namespace Test
@@ -146,7 +146,7 @@ namespace Test
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using US.AWise.SepCsvSourceGenerator;
+using AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
 namespace Test
@@ -174,7 +174,7 @@ namespace Test
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using US.AWise.SepCsvSourceGenerator;
+using AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
 namespace Test
@@ -196,7 +196,7 @@ namespace Test
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using US.AWise.SepCsvSourceGenerator;
+using AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
 public partial class MyGlobalRecord
@@ -218,7 +218,7 @@ public partial class MyGlobalRecord
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using US.AWise.SepCsvSourceGenerator;
+using AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
 public partial class MyGlobalRecord
@@ -242,7 +242,7 @@ public partial class MyGlobalRecord
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using US.AWise.SepCsvSourceGenerator;
+using AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
 public abstract class MyBaseClass
@@ -269,7 +269,7 @@ public partial class MyGlobalRecord : MyBaseClass
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using US.AWise.SepCsvSourceGenerator;
+using AWise.SepCsvSourceGenerator;
 using nietras.SeparatedValues;
 
 namespace Test

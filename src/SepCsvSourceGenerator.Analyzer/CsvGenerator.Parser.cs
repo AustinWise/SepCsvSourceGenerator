@@ -5,7 +5,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Reflection;
 
-namespace US.AWise.SepCsvSourceGenerator.Analyzer;
+namespace AWise.SepCsvSourceGenerator.Analyzer;
 
 public partial class CsvGenerator
 {
@@ -16,8 +16,8 @@ public partial class CsvGenerator
         private readonly CancellationToken _cancellationToken = cancellationToken;
 
         private readonly INamedTypeSymbol? _generateCsvParserAttributeSymbol = compilation.GetTypeByMetadataName(GenerateCsvParserAttributeFullName);
-        private readonly INamedTypeSymbol? _csvHeaderNameAttributeSymbol = compilation.GetTypeByMetadataName("US.AWise.SepCsvSourceGenerator.CsvHeaderNameAttribute");
-        private readonly INamedTypeSymbol? _csvDateFormatAttributeSymbol = compilation.GetTypeByMetadataName("US.AWise.SepCsvSourceGenerator.CsvDateFormatAttribute");
+        private readonly INamedTypeSymbol? _csvHeaderNameAttributeSymbol = compilation.GetTypeByMetadataName(GeneratorNamespace + ".CsvHeaderNameAttribute");
+        private readonly INamedTypeSymbol? _csvDateFormatAttributeSymbol = compilation.GetTypeByMetadataName(GeneratorNamespace + ".CsvDateFormatAttribute");
         private readonly INamedTypeSymbol? _sepReaderSymbol = compilation.GetTypeByMetadataName("nietras.SeparatedValues.SepReader");
         private readonly INamedTypeSymbol? _iAsyncEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IAsyncEnumerable`1");
         private readonly INamedTypeSymbol? _iEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IEnumerable`1");
