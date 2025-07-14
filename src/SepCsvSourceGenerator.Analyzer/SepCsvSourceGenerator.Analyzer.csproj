@@ -10,17 +10,17 @@
         <AssemblyName>AWise.SepCsvSourceGenerator</AssemblyName>
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <AnalysisLevel>latest</AnalysisLevel>
+        <!-- Version of releases is set based on tag name. -->
         <Version>0.0.1</Version>
-        <IncludeBuildOutput>false</IncludeBuildOutput>
-        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
-        <DevelopmentDependency>true</DevelopmentDependency>
+        <DebugType>embedded</DebugType>
     </PropertyGroup>
 
     <PropertyGroup Label="Nuget stuff">
+        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+        <DevelopmentDependency>true</DevelopmentDependency>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <!--<IncludeSymbols>true</IncludeSymbols>-->
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Authors>Austin Wise</Authors>
         <Description>A source generator for the Sep CSV reader.</Description>
