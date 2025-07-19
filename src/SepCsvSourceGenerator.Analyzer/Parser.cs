@@ -119,10 +119,10 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                     ITypeSymbol underlyingType;
                     bool isNullableType = IsNullableType(propertySymbol.Type, out underlyingType);
 
-                    bool isDateOrTime = IsType(propertySymbol.Type, _dateTimeSymbol) ||
-                                      IsType(propertySymbol.Type, _dateTimeOffsetSymbol) ||
-                                      IsType(propertySymbol.Type, _dateOnlySymbol) ||
-                                      IsType(propertySymbol.Type, _timeOnlySymbol);
+                    bool isDateOrTime = SymbolEqualityComparer.Default.Equals(underlyingType, _dateTimeSymbol) ||
+                                        SymbolEqualityComparer.Default.Equals(underlyingType, _dateTimeOffsetSymbol) ||
+                                        SymbolEqualityComparer.Default.Equals(underlyingType, _dateOnlySymbol) ||
+                                        SymbolEqualityComparer.Default.Equals(underlyingType, _timeOnlySymbol);
 
                     if (isDateOrTime)
                     {
@@ -248,13 +248,4 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
     }
 
     private void Diag(Diagnostic diagnostic) => _reportDiagnostic(diagnostic);
-
-    private bool IsType(ITypeSymbol typeSymbol, INamedTypeSymbol? typeToCheck)
-    {
-        if (typeToCheck is null) return false;
-        return SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition, typeToCheck) ||
-               (typeSymbol is INamedTypeSymbol nts && nts.IsGenericType &&
-                SymbolEqualityComparer.Default.Equals(nts.TypeArguments.FirstOrDefault()?.OriginalDefinition, typeToCheck) &&
-                SymbolEqualityComparer.Default.Equals(nts.OriginalDefinition, _nullableSymbol));
-    }
 }

@@ -34,7 +34,7 @@ namespace Test
         }
 
         [Fact]
-        public void Emitter_GeneratesCorrectCode_ForDateTimeProperty()
+        public void Emitter_GeneratesCorrectCode_ForNullableDateTimeProperty()
         {
             var source = @"
 using System;
@@ -49,7 +49,7 @@ namespace Test
     {
         [CsvHeaderName(""Date"")]
         [CsvDateFormat(""yyyy-MM-dd"")]
-        public DateTime Date { get; set; }
+        public DateTime? Date { get; set; }
 
         [GenerateCsvParser]
         public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
