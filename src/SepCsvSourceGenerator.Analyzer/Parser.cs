@@ -168,7 +168,6 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                         headerName!,
                         dateFormat,
                         propertySymbol.IsRequired,
-                        isNullableType,
                         kind
                     ));
                 }

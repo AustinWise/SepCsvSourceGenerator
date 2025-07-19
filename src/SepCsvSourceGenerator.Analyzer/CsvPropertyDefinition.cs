@@ -7,5 +7,4 @@ internal record CsvPropertyDefinition(
     string HeaderName,
     string? DateFormat,
     bool IsRequiredMember,
-    bool IsNullableType,
     CsvPropertyKind Kind);
