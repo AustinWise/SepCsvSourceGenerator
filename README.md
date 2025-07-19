@@ -74,17 +74,3 @@ The source generator also supports generating asynchronous parsing methods. To d
 [GenerateCsvParser]
 public static partial IAsyncEnumerable<MyRecord> ParseAsync(SepReader reader, CancellationToken ct);
 ```
-
-## TODO
-
-* Consider not requiring the `CsvHeaderName` attribute on every property. We could take inspiration
-  from how `System.Text.Json` [does it](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/customize-properties).
-* Support calling implementations of `ISpanParsable` that are explicitly implemented.
-* Consider supporting something other than `DateTime.ParseExact` for date parsing. It is a little
-  annoying to specify the format every time when we could potentially let `DateTime.Parse` "figure it out".
-* Make the cancellation token optional. Note that you can declare a default value for the cancellation
-  token already, which makes it optional for callers.
-* Consider allowing the parameters to the method be named something other than `reader` and `ct`.
-* Consider adding support for list-like types for properties (like arrays or List\<T\>).
-* Figure out what to do with the `AnalyzerReleases.Shipped.md` and `AnalyzerReleases.Unshipped.md` files.
-* Consider adding support for earlier Roslyn versions, to support older .NET SDKs and Visual Studio versions.
