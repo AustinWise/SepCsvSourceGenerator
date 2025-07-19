@@ -53,7 +53,7 @@ If a property is is `init` or `required`, an exception will be thrown if the CSV
 the column. If the property has `set`, the generated parser will only set the property if the column
 exists in the CSV file.
 
-The only types that are supported for parsing are types that implement
+The only types that are supported for parsing are enums and types that implement
 [ISpanParsable](https://learn.microsoft.com/en-us/dotnet/api/system.ispanparsable-1).
 
 `DateTime`, `DateTimeOffset`, `DateOnly`, and `TimeOnly` are given special treatment. They are parsed with
