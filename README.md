@@ -5,7 +5,7 @@ files using the excellent [Sep CSV library](https://github.com/nietras/Sep).
 
 ## Usage
 
-First, add a reference to the Nuget packages:
+First, add a reference to the [Nuget packages](https://www.nuget.org/packages/AWise.SepCsvSourceGenerator/):
 
 ```sh
 dotnet add package Sep
