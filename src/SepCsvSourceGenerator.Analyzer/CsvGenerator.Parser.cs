@@ -113,13 +113,12 @@ public partial class CsvGenerator
                         }
 
                         string? dateFormat = null;
-                        bool isDateTime = IsType(propertySymbol.Type, _dateTimeSymbol);
-                        bool isDateTimeOffset = IsType(propertySymbol.Type, _dateTimeOffsetSymbol);
-                        bool isDateOnly = IsType(propertySymbol.Type, _dateOnlySymbol);
-                        bool isTimeOnly = IsType(propertySymbol.Type, _timeOnlySymbol);
-                        bool needsDateFormat = isDateTime || isDateTimeOffset || isDateOnly || isTimeOnly;
+                        bool isDateOrTime = IsType(propertySymbol.Type, _dateTimeSymbol) ||
+                                          IsType(propertySymbol.Type, _dateTimeOffsetSymbol) ||
+                                          IsType(propertySymbol.Type, _dateOnlySymbol) ||
+                                          IsType(propertySymbol.Type, _timeOnlySymbol);
 
-                        if (needsDateFormat)
+                        if (isDateOrTime)
                         {
                             AttributeData? dateFormatAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
                                 SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvDateFormatAttributeSymbol));
@@ -152,7 +151,7 @@ public partial class CsvGenerator
                             isSpanParsable = typeParameter.ConstraintTypes.SelectMany(t => t.AllInterfaces.Concat([t.OriginalDefinition as INamedTypeSymbol])).Any(i => SymbolEqualityComparer.Default.Equals(i?.OriginalDefinition, _iSpanParsableSymbol));
                         }
 
-                        if (!isEnum && !isSpanParsable && !needsDateFormat)
+                        if (!isEnum && !isSpanParsable && !isDateOrTime)
                         {
                             Diag(Diagnostic.Create(DiagnosticDescriptors.PropertyNotParsable, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name, underlyingType.Name));
                             continue;
@@ -166,10 +165,7 @@ public partial class CsvGenerator
                             dateFormat,
                             isRequired,
                             isNullableType,
-                            isDateTime,
-                            isDateTimeOffset,
-                            isDateOnly,
-                            isTimeOnly,
+                            isDateOrTime,
                             SymbolEqualityComparer.Default.Equals(underlyingType.OriginalDefinition, _stringSymbol),
                             isEnum
                         ));
@@ -255,10 +251,7 @@ public partial class CsvGenerator
             string? DateFormat,
             bool IsRequiredMember,
             bool IsNullableType,
-            bool IsDateTime,
-            bool IsDateTimeOffset,
-            bool IsDateOnly,
-            bool IsTimeOnly,
+            bool IsDateOrTime,
             bool IsString,
             bool IsEnum);
 

@@ -234,21 +234,9 @@ public partial class CsvGenerator
         private static string GetParseExpression(Parser.CsvPropertyDefinition prop, string indexVarName)
         {
             string spanAccess = $"row[{indexVarName}].Span";
-            if (prop.IsDateTime)
+            if (prop.IsDateOrTime)
             {
-                return $"global::System.DateTime.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)";
-            }
-            if (prop.IsDateTimeOffset)
-            {
-                return $"global::System.DateTimeOffset.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)";
-            }
-            if (prop.IsDateOnly)
-            {
-                return $"global::System.DateOnly.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)";
-            }
-            if (prop.IsTimeOnly)
-            {
-                return $"global::System.TimeOnly.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)";
+                return $"{prop.UnderlyingTypeName}.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)";
             }
             if (prop.IsString)
             {
