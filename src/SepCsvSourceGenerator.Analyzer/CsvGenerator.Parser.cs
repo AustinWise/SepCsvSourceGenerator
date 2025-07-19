@@ -113,6 +113,22 @@ public partial class CsvGenerator
                         }
 
                         string? dateFormat = null;
+                        var kind = CsvPropertyKind.Default;
+
+                        ITypeSymbol underlyingType;
+                        bool isNullableType;
+                        {
+                            // TODO: this is checking for both nullable value types and nullable reference types. Ensure this is what we want.
+                            // Or delete if we never end up using it.
+                            isNullableType = propertySymbol.Type.NullableAnnotation == NullableAnnotation.Annotated ||
+                                                  (propertySymbol.Type is INamedTypeSymbol nts && nts.IsGenericType &&
+                                                   SymbolEqualityComparer.Default.Equals(nts.OriginalDefinition, _nullableSymbol));
+
+                            underlyingType = (isNullableType && propertySymbol.Type is INamedTypeSymbol ntsNullable && ntsNullable.IsGenericType)
+                                                       ? ntsNullable.TypeArguments[0]
+                                                       : propertySymbol.Type;
+                        }
+
                         bool isDateOrTime = IsType(propertySymbol.Type, _dateTimeSymbol) ||
                                           IsType(propertySymbol.Type, _dateTimeOffsetSymbol) ||
                                           IsType(propertySymbol.Type, _dateOnlySymbol) ||
@@ -120,6 +136,7 @@ public partial class CsvGenerator
 
                         if (isDateOrTime)
                         {
+                            kind = CsvPropertyKind.DateOrTime;
                             AttributeData? dateFormatAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
                                 SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvDateFormatAttributeSymbol));
                             if (dateFormatAttr == null || dateFormatAttr.ConstructorArguments.Length == 0 ||
@@ -130,31 +147,28 @@ public partial class CsvGenerator
                             }
                             dateFormat = dateFormatAttr.ConstructorArguments[0].Value as string;
                         }
-
-                        bool isRequired = propertySymbol.IsRequired; // For 'required' keyword
-
-                        // TODO: this is checking for both nullable value types and nullable reference types. Ensure this is what we want.
-                        // Or delete if we never end up using it.
-                        bool isNullableType = propertySymbol.Type.NullableAnnotation == NullableAnnotation.Annotated ||
-                                              (propertySymbol.Type is INamedTypeSymbol nts && nts.IsGenericType &&
-                                               SymbolEqualityComparer.Default.Equals(nts.OriginalDefinition, _nullableSymbol));
-
-                        ITypeSymbol underlyingType = (isNullableType && propertySymbol.Type is INamedTypeSymbol ntsNullable && ntsNullable.IsGenericType)
-                                                   ? ntsNullable.TypeArguments[0]
-                                                   : propertySymbol.Type;
-
-                        bool isEnum = underlyingType.BaseType != null && SymbolEqualityComparer.Default.Equals(underlyingType.BaseType, _enumSymbol);
-
-                        bool isSpanParsable = underlyingType.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, _iSpanParsableSymbol));
-                        if (!isSpanParsable && underlyingType is ITypeParameterSymbol typeParameter)
+                        else if (underlyingType.BaseType != null && SymbolEqualityComparer.Default.Equals(underlyingType.BaseType, _enumSymbol))
                         {
-                            isSpanParsable = typeParameter.ConstraintTypes.SelectMany(t => t.AllInterfaces.Concat([t.OriginalDefinition as INamedTypeSymbol])).Any(i => SymbolEqualityComparer.Default.Equals(i?.OriginalDefinition, _iSpanParsableSymbol));
+                            kind = CsvPropertyKind.Enum;
+                        }
+                        else if (SymbolEqualityComparer.Default.Equals(underlyingType.OriginalDefinition, _stringSymbol))
+                        {
+                            kind = CsvPropertyKind.String;
                         }
 
-                        if (!isEnum && !isSpanParsable && !isDateOrTime)
+                        if (kind == CsvPropertyKind.Default)
                         {
-                            Diag(Diagnostic.Create(DiagnosticDescriptors.PropertyNotParsable, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name, underlyingType.Name));
-                            continue;
+                            bool isSpanParsable = underlyingType.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, _iSpanParsableSymbol));
+                            if (!isSpanParsable && underlyingType is ITypeParameterSymbol typeParameter)
+                            {
+                                isSpanParsable = typeParameter.ConstraintTypes.SelectMany(t => t.AllInterfaces.Concat([t.OriginalDefinition as INamedTypeSymbol])).Any(i => SymbolEqualityComparer.Default.Equals(i?.OriginalDefinition, _iSpanParsableSymbol));
+                            }
+
+                            if (!isSpanParsable)
+                            {
+                                Diag(Diagnostic.Create(DiagnosticDescriptors.PropertyNotParsable, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name, underlyingType.Name));
+                                continue;
+                            }
                         }
 
                         propertiesToParse.Add(new CsvPropertyDefinition(
@@ -163,11 +177,9 @@ public partial class CsvGenerator
                             underlyingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                             headerName!,
                             dateFormat,
-                            isRequired,
+                            propertySymbol.IsRequired,
                             isNullableType,
-                            isDateOrTime,
-                            SymbolEqualityComparer.Default.Equals(underlyingType.OriginalDefinition, _stringSymbol),
-                            isEnum
+                            kind
                         ));
                     }
                     currentType = currentType.BaseType;
@@ -236,6 +248,14 @@ public partial class CsvGenerator
 
         private void Diag(Diagnostic diagnostic) => _reportDiagnostic(diagnostic);
 
+        internal enum CsvPropertyKind
+        {
+            Default,
+            DateOrTime,
+            String,
+            Enum,
+        }
+
         internal record CsvMethodDefinition(
             IMethodSymbol MethodSymbol,
             INamedTypeSymbol ContainingClassSymbol,
@@ -251,9 +271,7 @@ public partial class CsvGenerator
             string? DateFormat,
             bool IsRequiredMember,
             bool IsNullableType,
-            bool IsDateOrTime,
-            bool IsString,
-            bool IsEnum);
+            CsvPropertyKind Kind);
 
         private bool IsType(ITypeSymbol typeSymbol, INamedTypeSymbol? typeToCheck)
         {

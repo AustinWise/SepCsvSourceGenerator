@@ -234,20 +234,13 @@ public partial class CsvGenerator
         private static string GetParseExpression(Parser.CsvPropertyDefinition prop, string indexVarName)
         {
             string spanAccess = $"row[{indexVarName}].Span";
-            if (prop.IsDateOrTime)
+            return prop.Kind switch
             {
-                return $"{prop.UnderlyingTypeName}.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)";
-            }
-            if (prop.IsString)
-            {
-                return $"{spanAccess}.ToString()";
-            }
-            if (prop.IsEnum)
-            {
-                return $"global::System.Enum.Parse<{prop.UnderlyingTypeName}>({spanAccess})";
-            }
-            // Assumed ISpanParsable or similar static Parse for others
-            return $"{prop.UnderlyingTypeName}.Parse({spanAccess}, CultureInfo.InvariantCulture)";
+                Parser.CsvPropertyKind.DateOrTime => $"{prop.UnderlyingTypeName}.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)",
+                Parser.CsvPropertyKind.String => $"{spanAccess}.ToString()",
+                Parser.CsvPropertyKind.Enum => $"global::System.Enum.Parse<{prop.UnderlyingTypeName}>({spanAccess})",
+                _ => $"{prop.UnderlyingTypeName}.Parse({spanAccess}, CultureInfo.InvariantCulture)",
+            };
         }
     }
 }
