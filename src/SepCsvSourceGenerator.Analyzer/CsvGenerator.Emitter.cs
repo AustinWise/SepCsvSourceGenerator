@@ -239,7 +239,8 @@ public partial class CsvGenerator
                 Parser.CsvPropertyKind.DateOrTime => $"{prop.UnderlyingTypeName}.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)",
                 Parser.CsvPropertyKind.String => $"{spanAccess}.ToString()",
                 Parser.CsvPropertyKind.Enum => $"global::System.Enum.Parse<{prop.UnderlyingTypeName}>({spanAccess})",
-                _ => $"{prop.UnderlyingTypeName}.Parse({spanAccess}, CultureInfo.InvariantCulture)",
+                Parser.CsvPropertyKind.SpanParsable => $"{prop.UnderlyingTypeName}.Parse({spanAccess}, CultureInfo.InvariantCulture)",
+                _ => throw new InvalidOperationException()
             };
         }
     }
