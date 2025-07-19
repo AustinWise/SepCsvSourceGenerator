@@ -42,18 +42,19 @@ public partial class RunGeneratedParserTests
     public void Parse()
     {
         using var reader = Sep.Reader().FromText(CSV_CONTENT);
-        Verify(MyRecord.Parse(reader, CancellationToken.None).ToList());
+        Verify(MyRecord.Parse(reader, CancellationToken.None));
     }
 
     [Fact]
     public void ParseAsync()
     {
         using var reader = Sep.Reader().FromText(CSV_CONTENT);
-        Verify(MyRecord.ParseAsync(reader, CancellationToken.None).ToBlockingEnumerable().ToList());
+        Verify(MyRecord.ParseAsync(reader, CancellationToken.None).ToBlockingEnumerable());
     }
 
-    private static void Verify(List<MyRecord> list)
+    private static void Verify(IEnumerable<MyRecord> enumerable)
     {
+        var list = enumerable.ToList();
         Assert.Equal(2, list.Count);
 
         MyRecord item1 = list[0];

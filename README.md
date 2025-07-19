@@ -89,3 +89,4 @@ public static partial IAsyncEnumerable<MyRecord> ParseAsync(SepReader reader, Ca
 * Consider allowing the parameters to the method be named something other than `reader` and `ct`.
 * Consider adding support for list-like types for properties (like arrays or List\<T\>).
 * Figure out what to do with the `AnalyzerReleases.Shipped.md` and `AnalyzerReleases.Unshipped.md` files.
+* Consider adding support for earlier Roslyn versions, to support older .NET SDKs and Visual Studio versions.

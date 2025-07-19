@@ -39,7 +39,7 @@ public partial class CsvGenerator
         {
             var results = new List<CsvMethodDefinition>();
 
-            List<FieldInfo> nullFields = this.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance).Where(f => f.FieldType == typeof(INamedTypeSymbol) && f.GetValue(this) is null).ToList();
+            List<FieldInfo> nullFields = [.. this.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance).Where(f => f.FieldType == typeof(INamedTypeSymbol) && f.GetValue(this) is null)];
             if (nullFields.Count != 0)
             {
                 string missingTypes = string.Join(", ", nullFields.Select(f => reformatFieldName(f.Name)));
@@ -145,7 +145,7 @@ public partial class CsvGenerator
                         bool isSpanParsable = underlyingType.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, _iSpanParsableSymbol));
                         if (!isSpanParsable && underlyingType is ITypeParameterSymbol typeParameter)
                         {
-                            isSpanParsable = typeParameter.ConstraintTypes.SelectMany(t => t.AllInterfaces.Concat(new[] { t.OriginalDefinition as INamedTypeSymbol })).Any(i => SymbolEqualityComparer.Default.Equals(i?.OriginalDefinition, _iSpanParsableSymbol));
+                            isSpanParsable = typeParameter.ConstraintTypes.SelectMany(t => t.AllInterfaces.Concat([t.OriginalDefinition as INamedTypeSymbol])).Any(i => SymbolEqualityComparer.Default.Equals(i?.OriginalDefinition, _iSpanParsableSymbol));
                         }
 
                         if (!isEnum && !isSpanParsable && !isDateTime)

@@ -242,7 +242,7 @@ namespace Test
             }
 
             var compilation = RoslynTestUtils.CreateCompilation([text], refs);
-            var (outputCompilation, diagnostics) = RoslynTestUtils.RunGenerator(compilation, new CsvGenerator());
+            var (_, diagnostics) = RoslynTestUtils.RunGenerator(compilation, new CsvGenerator());
 
             return diagnostics;
         }

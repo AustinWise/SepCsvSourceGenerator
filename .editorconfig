@@ -1,0 +1,9 @@
+root = true
+
+[*.cs]
+
+# This causes the `dotnet format` command to crash.
+dotnet_style_namespace_match_folder = false:suggestion
+
+# This is not supported by `dotnet format`.
+dotnet_diagnostic.IDE1006.severity = none
