@@ -173,6 +173,32 @@ namespace Test
             RunTestAsync(source, "RequiredProperty.generated.txt");
         }
 
+
+        [Fact(Skip = "Does not generate valid code.")]
+        public void Emitter_GeneratesCorrectCode_ForInitProperty()
+        {
+            var source = @"
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using AWise.SepCsvSourceGenerator;
+using nietras.SeparatedValues;
+
+namespace Test
+{
+    public partial class MyRecordWithRequired
+    {
+        [CsvHeaderName(""Name"")]
+        public string Name { get; init; }
+
+        [GenerateCsvParser]
+        public static partial IAsyncEnumerable<MyRecordWithRequired> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+    }
+}
+";
+            RunTestAsync(source, "InitProperty.generated.txt");
+        }
+
         [Fact]
         public void Emitter_GeneratesCorrectCode_ForNestedClass()
         {
