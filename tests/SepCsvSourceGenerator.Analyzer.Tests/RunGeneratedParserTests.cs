@@ -74,3 +74,42 @@ public partial class RunGeneratedParserTests
         Assert.Null(item2.MissingField);
     }
 }
+
+public partial class RunGeneratedParserTests_WithNewDateTypes
+{
+    public partial class MyRecordWithNewDates
+    {
+        [CsvHeaderName("ID")]
+        public int Id { get; set; }
+
+        [CsvHeaderName("Date")]
+        [CsvDateFormat("yyyy-MM-dd")]
+        public DateOnly Date { get; set; }
+
+        [CsvHeaderName("Time")]
+        [CsvDateFormat("HH:mm:ss.fff")]
+        public TimeOnly Time { get; set; }
+
+        [CsvHeaderName("Offset")]
+        [CsvDateFormat("o")]
+        public DateTimeOffset Dto { get; set; }
+
+        [GenerateCsvParser]
+        public static partial IEnumerable<MyRecordWithNewDates> Parse(SepReader reader, CancellationToken ct);
+    }
+
+    const string CSV_CONTENT = "ID,Date,Time,Offset\n1,2024-01-01,13:14:15.123,2024-05-10T10:00:00.0000000-05:00";
+
+    [Fact]
+    public void Parse()
+    {
+        using var reader = Sep.Reader().FromText(CSV_CONTENT);
+        var list = MyRecordWithNewDates.Parse(reader, CancellationToken.None).ToList();
+        var item1 = Assert.Single(list);
+
+        Assert.Equal(1, item1.Id);
+        Assert.Equal(new DateOnly(2024, 1, 1), item1.Date);
+        Assert.Equal(new TimeOnly(13, 14, 15, 123), item1.Time);
+        Assert.Equal(new DateTimeOffset(2024, 5, 10, 10, 0, 0, TimeSpan.FromHours(-5)), item1.Dto);
+    }
+}

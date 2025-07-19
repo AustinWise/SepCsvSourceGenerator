@@ -23,6 +23,9 @@ public partial class CsvGenerator
         private readonly INamedTypeSymbol? _iEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IEnumerable`1");
         private readonly INamedTypeSymbol? _cancellationTokenSymbol = compilation.GetTypeByMetadataName("System.Threading.CancellationToken");
         private readonly INamedTypeSymbol? _dateTimeSymbol = compilation.GetSpecialType(SpecialType.System_DateTime);
+        private readonly INamedTypeSymbol? _dateTimeOffsetSymbol = compilation.GetTypeByMetadataName("System.DateTimeOffset");
+        private readonly INamedTypeSymbol? _dateOnlySymbol = compilation.GetTypeByMetadataName("System.DateOnly");
+        private readonly INamedTypeSymbol? _timeOnlySymbol = compilation.GetTypeByMetadataName("System.TimeOnly");
         private readonly INamedTypeSymbol? _stringSymbol = compilation.GetSpecialType(SpecialType.System_String);
         private readonly INamedTypeSymbol? _nullableSymbol = compilation.GetSpecialType(SpecialType.System_Nullable_T);
         private readonly INamedTypeSymbol? _enumSymbol = compilation.GetTypeByMetadataName("System.Enum");
@@ -110,12 +113,13 @@ public partial class CsvGenerator
                         }
 
                         string? dateFormat = null;
-                        bool isDateTime = SymbolEqualityComparer.Default.Equals(propertySymbol.Type.OriginalDefinition, _dateTimeSymbol) ||
-                                          (propertySymbol.Type is INamedTypeSymbol ntsDateTime && ntsDateTime.IsGenericType &&
-                                           SymbolEqualityComparer.Default.Equals(ntsDateTime.TypeArguments.FirstOrDefault()?.OriginalDefinition, _dateTimeSymbol) &&
-                                           SymbolEqualityComparer.Default.Equals(ntsDateTime.OriginalDefinition, _nullableSymbol));
+                        bool isDateTime = IsType(propertySymbol.Type, _dateTimeSymbol);
+                        bool isDateTimeOffset = IsType(propertySymbol.Type, _dateTimeOffsetSymbol);
+                        bool isDateOnly = IsType(propertySymbol.Type, _dateOnlySymbol);
+                        bool isTimeOnly = IsType(propertySymbol.Type, _timeOnlySymbol);
+                        bool needsDateFormat = isDateTime || isDateTimeOffset || isDateOnly || isTimeOnly;
 
-                        if (isDateTime)
+                        if (needsDateFormat)
                         {
                             AttributeData? dateFormatAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
                                 SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvDateFormatAttributeSymbol));
@@ -148,7 +152,7 @@ public partial class CsvGenerator
                             isSpanParsable = typeParameter.ConstraintTypes.SelectMany(t => t.AllInterfaces.Concat([t.OriginalDefinition as INamedTypeSymbol])).Any(i => SymbolEqualityComparer.Default.Equals(i?.OriginalDefinition, _iSpanParsableSymbol));
                         }
 
-                        if (!isEnum && !isSpanParsable && !isDateTime)
+                        if (!isEnum && !isSpanParsable && !needsDateFormat)
                         {
                             Diag(Diagnostic.Create(DiagnosticDescriptors.PropertyNotParsable, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name, underlyingType.Name));
                             continue;
@@ -163,6 +167,9 @@ public partial class CsvGenerator
                             isRequired,
                             isNullableType,
                             isDateTime,
+                            isDateTimeOffset,
+                            isDateOnly,
+                            isTimeOnly,
                             SymbolEqualityComparer.Default.Equals(underlyingType.OriginalDefinition, _stringSymbol),
                             isEnum
                         ));
@@ -249,7 +256,19 @@ public partial class CsvGenerator
             bool IsRequiredMember,
             bool IsNullableType,
             bool IsDateTime,
+            bool IsDateTimeOffset,
+            bool IsDateOnly,
+            bool IsTimeOnly,
             bool IsString,
             bool IsEnum);
+
+        private bool IsType(ITypeSymbol typeSymbol, INamedTypeSymbol? typeToCheck)
+        {
+            if (typeToCheck is null) return false;
+            return SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition, typeToCheck) ||
+                   (typeSymbol is INamedTypeSymbol nts && nts.IsGenericType &&
+                    SymbolEqualityComparer.Default.Equals(nts.TypeArguments.FirstOrDefault()?.OriginalDefinition, typeToCheck) &&
+                    SymbolEqualityComparer.Default.Equals(nts.OriginalDefinition, _nullableSymbol));
+        }
     }
 }

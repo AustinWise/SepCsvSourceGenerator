@@ -238,6 +238,18 @@ public partial class CsvGenerator
             {
                 return $"global::System.DateTime.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)";
             }
+            if (prop.IsDateTimeOffset)
+            {
+                return $"global::System.DateTimeOffset.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)";
+            }
+            if (prop.IsDateOnly)
+            {
+                return $"global::System.DateOnly.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)";
+            }
+            if (prop.IsTimeOnly)
+            {
+                return $"global::System.TimeOnly.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)";
+            }
             if (prop.IsString)
             {
                 return $"{spanAccess}.ToString()";

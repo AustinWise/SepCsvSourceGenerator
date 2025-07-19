@@ -56,16 +56,15 @@ exists in the CSV file.
 The only types that are supported for parsing are types that implement
 [ISpanParsable](https://learn.microsoft.com/en-us/dotnet/api/system.ispanparsable-1).
 
-`DateTime` is given special treatment: it is parsed with
-[`DateTime.ParseExact`](https://learn.microsoft.com/en-us/dotnet/api/system.datetime.parseexact)
-using `CultureInfo.InvariantCulture`. Specify the date-time format using the `CsvDateFormat` attribute.
+`DateTime`, `DateTimeOffset`, `DateOnly`, and `TimeOnly` are given special treatment. They are parsed with
+their respective `ParseExact` methods using `CultureInfo.InvariantCulture`. Specify the date-time format using the `CsvDateFormat` attribute.
 
 ### Supported attributes
 
 The following attributes are supported on the properties of the partial class:
 
 * `[CsvHeaderName("...")]`: Specifies the name of the column in the CSV file.
-* `[CsvDateFormat("...")]`: Specifies the date format for `DateTime` properties.
+* `[CsvDateFormat("...")]`: Specifies the date format for `DateTime`, `DateTimeOffset`, `DateOnly`, and `TimeOnly` properties.
 
 ### Async parsing
 
@@ -81,7 +80,6 @@ public static partial IAsyncEnumerable<MyRecord> ParseAsync(SepReader reader, Ca
 * Consider not requiring the `CsvHeaderName` attribute on every property. We could take inspiration
   from how `System.Text.Json` [does it](https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/customize-properties).
 * Support calling implementations of `ISpanParsable` that are explicitly implemented.
-* Add support for other date and time types like `DateTimeOffset`, `DateOnly`, and `TimeOnly`.
 * Consider supporting something other than `DateTime.ParseExact` for date parsing. It is a little
   annoying to specify the format every time when we could potentially let `DateTime.Parse` "figure it out".
 * Make the cancellation token optional. Note that you can declare a default value for the cancellation

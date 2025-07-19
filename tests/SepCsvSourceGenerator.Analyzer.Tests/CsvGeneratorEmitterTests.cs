@@ -60,6 +60,40 @@ namespace Test
         }
 
         [Fact]
+        public void Emitter_GeneratesCorrectCode_ForDateTypes()
+        {
+            var source = @"
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using AWise.SepCsvSourceGenerator;
+using nietras.SeparatedValues;
+
+namespace Test
+{
+    public partial class MyRecord
+    {
+        [CsvHeaderName(""Date"")]
+        [CsvDateFormat(""yyyy-MM-dd"")]
+        public DateOnly Date { get; set; }
+
+        [CsvHeaderName(""Time"")]
+        [CsvDateFormat(""HH:mm:ss"")]
+        public TimeOnly Time { get; set; }
+
+        [CsvHeaderName(""DateTimeOffset"")]
+        [CsvDateFormat(""o"")]
+        public DateTimeOffset Dto { get; set; }
+
+        [GenerateCsvParser]
+        public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+    }
+}
+";
+            RunTestAsync(source, "DateTypes.generated.txt");
+        }
+
+        [Fact]
         public void Emitter_GeneratesCorrectCode_ForPropertyInBaseClass()
         {
             var source = @"
