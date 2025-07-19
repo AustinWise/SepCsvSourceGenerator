@@ -9,9 +9,6 @@ namespace AWise.SepCsvSourceGenerator.Analyzer;
 [Generator]
 public partial class CsvGenerator : IIncrementalGenerator
 {
-    const string GeneratorNamespace = "AWise.SepCsvSourceGenerator";
-    public const string GenerateCsvParserAttributeFullName = GeneratorNamespace + ".GenerateCsvParserAttribute";
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(static spc =>
@@ -53,7 +50,7 @@ public partial class CsvGenerator : IIncrementalGenerator
         });
         IncrementalValuesProvider<MethodDeclarationSyntax> methodDeclarations = context.SyntaxProvider
             .ForAttributeWithMetadataName(
-                GenerateCsvParserAttributeFullName,
+                Parser.GenerateCsvParserAttributeFullName,
                 predicate: static (node, _) => node is MethodDeclarationSyntax,
                 transform: static (context, _) => (MethodDeclarationSyntax)context.TargetNode);
 
