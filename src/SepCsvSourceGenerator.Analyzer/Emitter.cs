@@ -156,7 +156,7 @@ internal sealed class Emitter
             IncreaseIndent();
             if (prop.IsRequiredMember)
             {
-                AppendLine($"throw new global::System.ArgumentException($\"Missing required column '{prop.HeaderName}' for required member '{itemTypeName}.{prop.Name}'.\");");
+                AppendLine($"throw new global::System.ArgumentException($\"Missing required column '{prop.HeaderName}' for required property '{prop.Name}'.\");");
             }
             else
             {

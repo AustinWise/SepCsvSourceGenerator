@@ -15,11 +15,11 @@ namespace Test
 
             if (!reader.Header.TryIndexOf("DerivedName", out DerivedNameNdx))
             {
-                throw new global::System.ArgumentException($"Missing required column 'DerivedName' for required member 'global::Test.DerivedRecord.DerivedName'.");
+                throw new global::System.ArgumentException($"Missing required column 'DerivedName' for required property 'DerivedName'.");
             }
             if (!reader.Header.TryIndexOf("BaseName", out BaseNameNdx))
             {
-                throw new global::System.ArgumentException($"Missing required column 'BaseName' for required member 'global::Test.DerivedRecord.BaseName'.");
+                throw new global::System.ArgumentException($"Missing required column 'BaseName' for required property 'BaseName'.");
             }
 
             await foreach (SepReader.Row row in reader

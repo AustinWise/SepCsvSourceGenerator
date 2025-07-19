@@ -14,7 +14,7 @@ namespace Test
 
             if (!reader.Header.TryIndexOf("Name", out NameNdx))
             {
-                throw new global::System.ArgumentException($"Missing required column 'Name' for required member 'global::Test.MyRecordWithRequired.Name'.");
+                throw new global::System.ArgumentException($"Missing required column 'Name' for required property 'Name'.");
             }
 
             await foreach (SepReader.Row row in reader
