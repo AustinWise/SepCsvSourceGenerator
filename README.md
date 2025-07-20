@@ -33,7 +33,7 @@ public partial class MyRecord
     public DateTime Date { get; set; }
 
     [GenerateCsvParser]
-    public static partial IEnumerable<MyRecord> Parse(SepReader reader, CancellationToken ct);
+    public static partial IEnumerable<MyRecord> Parse(SepReader reader);
 }
 ```
 
@@ -43,7 +43,7 @@ You can then use the generated `Parse` method to parse a CSV file:
 const string CSV_CONTENT = "Name,Date\nJohn,2023-01-15\nJane,2023-02-20";
 
 using var reader = Sep.Reader().FromText(CSV_CONTENT);
-var records = MyRecord.Parse(reader, CancellationToken.None);
+var records = MyRecord.Parse(reader);
 
 foreach (var record in records)
 {
@@ -68,6 +68,22 @@ The following attributes are supported on the properties of the partial class:
 * `[CsvHeaderName("...")]`: Specifies the name of the column in the CSV file.
 * `[CsvDateFormat("...")]`: Specifies the date format for `DateTime`, `DateTimeOffset`, `DateOnly`, and `TimeOnly` properties.
 
+The `GenerateCsvParser` attribute has a `IncludeProperties` property that can be set to `true` to
+parse all properties on the class. For example:
+
+```csharp
+public partial class MyRecord
+{
+    public required string Name { get; set; }
+
+    [CsvDateFormat("yyyy-MM-dd")]
+    public DateTime Date { get; set; }
+
+    [GenerateCsvParser(IncludeProperties = true)]
+    public static partial IEnumerable<MyRecord> Parse(SepReader reader);
+}
+```
+
 ### Async parsing
 
 The source generator also supports generating asynchronous parsing methods. To do this, define a method that returns an `IAsyncEnumerable<T>`:
@@ -76,3 +92,17 @@ The source generator also supports generating asynchronous parsing methods. To d
 [GenerateCsvParser]
 public static partial IAsyncEnumerable<MyRecord> ParseAsync(SepReader reader, CancellationToken ct);
 ```
+
+## Changelog
+
+### 0.2.0
+
+* Support for `IncludeProperties` property on `GenerateCsvParser` attribute, to include all properties on the class.
+* Support for properties with `init` (not `set`) and no `required` keyword.
+* Allow the parameters names (of the `SepReader` and `CancellationToken` types) to be any valid C# identifier.
+* Allow the  `CancellationToken` parameter to be omitted.
+* Improved error messages when a column is not found in the header of a CSV file.
+
+### 0.1.0
+
+Initial release.
