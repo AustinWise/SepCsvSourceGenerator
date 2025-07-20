@@ -14,25 +14,22 @@ public partial class RunGeneratedParserTests
     public partial class MyRecord : BaseRecord
     {
         [CsvHeaderName("Name")]
-        public required string Name { get; set; }
+        public required string PersonName { get; set; }
 
-        [CsvHeaderName("Date")]
         [CsvDateFormat("yyyy-MM-dd")]
         public DateTime Date { get; set; }
 
         [CsvHeaderName("Enum")]
         public MyEnum EnumValue { get; set; }
 
-        [CsvHeaderName("NullableInt")]
         public int? NullableInt { get; set; }
 
-        [CsvHeaderName("MissingField")]
         public string? MissingField { get; set; }
 
-        [GenerateCsvParser]
+        [GenerateCsvParser(IncludeProperties = true)]
         public static partial IEnumerable<MyRecord> Parse(SepReader reader, CancellationToken ct);
 
-        [GenerateCsvParser]
+        [GenerateCsvParser(IncludeProperties = true)]
         public static partial IAsyncEnumerable<MyRecord> ParseAsync(SepReader reader, CancellationToken ct);
     }
 
@@ -59,7 +56,7 @@ public partial class RunGeneratedParserTests
 
         MyRecord item1 = list[0];
         Assert.Equal(1, item1.Id);
-        Assert.Equal("John Doe", item1.Name);
+        Assert.Equal("John Doe", item1.PersonName);
         Assert.Equal(new DateTime(2023, 1, 15), item1.Date);
         Assert.Equal(MyEnum.A, item1.EnumValue);
         Assert.Equal(42, item1.NullableInt);
@@ -67,7 +64,7 @@ public partial class RunGeneratedParserTests
 
         MyRecord item2 = list[1];
         Assert.Equal(2, item2.Id);
-        Assert.Equal("Jane", item2.Name);
+        Assert.Equal("Jane", item2.PersonName);
         Assert.Equal(new DateTime(2023, 2, 20), item2.Date);
         Assert.Equal(MyEnum.B, item2.EnumValue);
         Assert.Equal(123, item2.NullableInt);
