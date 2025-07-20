@@ -5,4 +5,3 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-CSVGEN009 | Usage | Error | DiagnosticDescriptors

@@ -95,6 +95,10 @@ public static partial IAsyncEnumerable<MyRecord> ParseAsync(SepReader reader, Ca
 
 ## Changelog
 
+### 0.2.1
+
+Support for multiple header names.
+
 ### 0.2.0
 
 * Support for `IncludeProperties` property on `GenerateCsvParser` attribute, to include all properties on the class.
