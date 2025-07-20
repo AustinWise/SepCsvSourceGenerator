@@ -188,9 +188,6 @@ internal sealed class Emitter
         AppendLine("ct.ThrowIfCancellationRequested();");
         AppendLine("");
 
-        var initializerProps = methodDef.PropertiesToParse.Where(p => p.IsRequiredMember || p.IsInitOnly).ToList();
-        var otherProps = methodDef.PropertiesToParse.Where(p => !p.IsRequiredMember && !p.IsInitOnly).ToList();
-
         AppendLine($"{itemTypeName} ret = new {itemTypeName}()");
         AppendLine("{");
         IncreaseIndent();
