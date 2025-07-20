@@ -8,4 +8,6 @@ internal record CsvMethodDefinition(
     INamedTypeSymbol ContainingClassSymbol,
     INamedTypeSymbol ItemTypeSymbol,
     bool IsAsync,
+    string ReaderParameterName,
+    string? CancellationTokenParameterName,
     ImmutableList<CsvPropertyDefinition> PropertiesToParse);

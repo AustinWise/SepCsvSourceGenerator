@@ -26,7 +26,7 @@ namespace Test
         public MyEnum Status { get; set; }
 
         [GenerateCsvParser]
-        public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+        public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken ct);
     }
 }
 ";
@@ -52,7 +52,7 @@ namespace Test
         public DateTime? Date { get; set; }
 
         [GenerateCsvParser]
-        public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+        public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken ct);
     }
 }
 ";
@@ -86,7 +86,7 @@ namespace Test
         public DateTimeOffset Dto { get; set; }
 
         [GenerateCsvParser]
-        public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+        public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken ct);
     }
 }
 ";
@@ -116,7 +116,7 @@ namespace Test
         public required string DerivedName { get; init; }
 
         [GenerateCsvParser]
-        public static partial IAsyncEnumerable<DerivedRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+        public static partial IAsyncEnumerable<DerivedRecord> ParseRecords(SepReader reader, CancellationToken ct);
     }
 }
 ";
@@ -141,7 +141,7 @@ namespace My.Awesome.Namespace
         public string? Name { get; set; }
 
         [GenerateCsvParser]
-        public static partial IAsyncEnumerable<MyRecordInNamespace> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+        public static partial IAsyncEnumerable<MyRecordInNamespace> ParseRecords(SepReader reader, CancellationToken ct);
     }
 }
 ";
@@ -166,7 +166,7 @@ namespace Test
         public required string Name { get; set; }
 
         [GenerateCsvParser]
-        public static partial IAsyncEnumerable<MyRecordWithRequired> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+        public static partial IAsyncEnumerable<MyRecordWithRequired> ParseRecords(SepReader reader, CancellationToken ct);
     }
 }
 ";
@@ -192,7 +192,7 @@ namespace Test
         public string? Name { get; init; }
 
         [GenerateCsvParser]
-        public static partial IAsyncEnumerable<MyRecordWithRequired> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+        public static partial IAsyncEnumerable<MyRecordWithRequired> ParseRecords(SepReader reader, CancellationToken ct);
     }
 }
 ";
@@ -219,7 +219,7 @@ namespace Test
             public string? Name { get; set; }
 
             [GenerateCsvParser]
-            public static partial IAsyncEnumerable<NestedClass> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+            public static partial IAsyncEnumerable<NestedClass> ParseRecords(SepReader reader, CancellationToken ct);
         }
     }
 }
@@ -242,7 +242,7 @@ namespace Test
     public partial record struct MyRecordStruct([property: CsvHeaderName(""Name"")] string Name)
     {
         [GenerateCsvParser]
-        public static partial IAsyncEnumerable<MyRecordStruct> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+        public static partial IAsyncEnumerable<MyRecordStruct> ParseRecords(SepReader reader, CancellationToken ct);
     }
 }
 ";
@@ -265,7 +265,7 @@ public partial class MyGlobalRecord
     public string? Name { get; set; }
 
     [GenerateCsvParser]
-    public static partial IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+    public static partial IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken ct);
 }
 ";
             RunTestAsync(source, "GlobalNamespaceClass.generated.txt");
@@ -289,7 +289,7 @@ public partial class MyGlobalRecord
     public string? UnrelatedProperty { get; set; }
 
     [GenerateCsvParser]
-    public static partial IEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+    public static partial IEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken ct);
 }
 ";
             RunTestAsync(source, "IEnumerable.generated.txt");
@@ -313,7 +313,7 @@ public partial class MyGlobalRecord
     public string? UnrelatedProperty { get; set; }
 
     [GenerateCsvParser(IncludeProperties = true)]
-    public static partial IEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+    public static partial IEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken ct);
 }
 ";
             RunTestAsync(source, "IncludeProperties.generated.txt");
@@ -331,7 +331,7 @@ using nietras.SeparatedValues;
 
 public abstract class MyBaseClass
 {
-    protected abstract IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+    protected abstract IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken ct);
 }
 
 public partial class MyGlobalRecord : MyBaseClass
@@ -340,7 +340,7 @@ public partial class MyGlobalRecord : MyBaseClass
     public string? Name { get; set; }
 
     [GenerateCsvParser]
-    protected override partial IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+    protected override partial IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken ct);
 }
 ";
             RunTestAsync(source, "DifferentModifiers.generated.txt");
@@ -367,11 +367,61 @@ namespace Test
         public required T Value { get; set; }
 
         [GenerateCsvParser]
-        public static partial IAsyncEnumerable<MyGenericRecord<T>> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+        public static partial IAsyncEnumerable<MyGenericRecord<T>> ParseRecords(SepReader reader, CancellationToken ct);
     }
 }
 ";
             RunTestAsync(source, "GenericClass.generated.txt");
+        }
+
+        [Fact]
+        public void Emitter_GeneratesCorrectCode_ForCustomParameterNames()
+        {
+            var source = @"
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using AWise.SepCsvSourceGenerator;
+using nietras.SeparatedValues;
+
+namespace Test
+{
+    public partial class MyRecord
+    {
+        [CsvHeaderName(""Name"")]
+        public string? Name { get; set; }
+
+        [GenerateCsvParser]
+        public static partial IAsyncEnumerable<MyRecord> ParseWhatHo(SepReader whatHoReader, CancellationToken deucedCancellationToken);
+    }
+}
+";
+            RunTestAsync(source, "CustomParameterNames.generated.txt");
+        }
+
+        [Fact]
+        public void Emitter_GeneratesCorrectCode_ForOptionalCancellationToken()
+        {
+            var source = @"
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using AWise.SepCsvSourceGenerator;
+using nietras.SeparatedValues;
+
+namespace Test
+{
+    public partial class MyRecord
+    {
+        [CsvHeaderName(""Name"")]
+        public string? Name { get; set; }
+
+        [GenerateCsvParser]
+        public static partial IAsyncEnumerable<MyRecord> ParseWithNoCt(SepReader reader);
+    }
+}
+";
+            RunTestAsync(source, "OptionalCancellationToken.generated.txt");
         }
 
         private static void RunTestAsync(string source, string baselineFileName)

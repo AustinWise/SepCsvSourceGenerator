@@ -134,9 +134,17 @@ internal sealed class Emitter
 
         var line = new StringBuilder();
         line.Append(string.Join(" ", modifiers))
-                .Append($" {returnType} {methodDef.MethodSymbol.Name}(SepReader reader, ")
-                .Append(methodDef.IsAsync ? "[EnumeratorCancellation] " : "")
-                .Append("global::System.Threading.CancellationToken ct)");
+                .Append($" {returnType} {methodDef.MethodSymbol.Name}(SepReader {methodDef.ReaderParameterName}");
+        if (methodDef.CancellationTokenParameterName is not null)
+        {
+            line.Append(", ");
+            if (methodDef.IsAsync)
+            {
+                line.Append("[EnumeratorCancellation] ");
+            }
+            line.Append($"global::System.Threading.CancellationToken {methodDef.CancellationTokenParameterName}");
+        }
+        line.Append(')');
         AppendLine(line.ToString());
         AppendLine("{");
         IncreaseIndent();
@@ -151,7 +159,7 @@ internal sealed class Emitter
         // Get header indices
         foreach (var prop in methodDef.PropertiesToParse)
         {
-            AppendLine($"if (!reader.Header.TryIndexOf(\"{prop.HeaderName}\", out {prop.Name}Ndx))");
+            AppendLine($"if (!{methodDef.ReaderParameterName}.Header.TryIndexOf(\"{prop.HeaderName}\", out {prop.Name}Ndx))");
             AppendLine("{");
             IncreaseIndent();
             if (prop.IsRequiredMember)
@@ -169,23 +177,33 @@ internal sealed class Emitter
 
         if (methodDef.IsAsync)
         {
-            AppendLine("await foreach (SepReader.Row row in reader");
+            AppendLine($"await foreach (SepReader.Row row in {methodDef.ReaderParameterName}");
             // The ConfigureAwait only works in .NET 10 and later: https://github.com/dotnet/runtime/issues/112007
             IncreaseIndent();
             AppendLine("#if NET10_0_OR_GREATER");
-            AppendLine(".WithCancellation(ct).ConfigureAwait(false)");
+            if (methodDef.CancellationTokenParameterName is not null)
+            {
+                AppendLine($".WithCancellation({methodDef.CancellationTokenParameterName}).ConfigureAwait(false)");
+            }
+            else
+            {
+                AppendLine(".ConfigureAwait(false)");
+            }
             AppendLine("#endif");
             DecreaseIndent();
             AppendLine(")");
         }
         else
         {
-            AppendLine("foreach (SepReader.Row row in reader)");
+            AppendLine($"foreach (SepReader.Row row in {methodDef.ReaderParameterName})");
         }
 
         AppendLine("{");
         IncreaseIndent();
-        AppendLine("ct.ThrowIfCancellationRequested();");
+        if (methodDef.CancellationTokenParameterName is not null)
+        {
+            AppendLine($"{methodDef.CancellationTokenParameterName}.ThrowIfCancellationRequested();");
+        }
         AppendLine("");
 
         AppendLine($"{itemTypeName} ret = new {itemTypeName}()");

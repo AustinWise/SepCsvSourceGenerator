@@ -202,7 +202,10 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                 Diag(Diagnostic.Create(DiagnosticDescriptors.NoPropertiesFound, methodSyntax.Identifier.GetLocation(), itemTypeSymbol.Name));
             }
 
-            results.Add(new CsvMethodDefinition(methodSymbol, containingClassSymbol, itemTypeSymbol, isAsync, [.. propertiesToParse]));
+            var readerParameterName = methodSymbol.Parameters[0].Name;
+            var cancellationTokenParameterName = methodSymbol.Parameters.Length > 1 ? methodSymbol.Parameters[1].Name : null;
+
+            results.Add(new CsvMethodDefinition(methodSymbol, containingClassSymbol, itemTypeSymbol, isAsync, readerParameterName, cancellationTokenParameterName, [.. propertiesToParse]));
         }
         return results;
     }
@@ -249,9 +252,19 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
             isAsync = true;
         }
 
-        if (methodSymbol.Parameters.Length != 2 ||
-            !SymbolEqualityComparer.Default.Equals(methodSymbol.Parameters[0].Type, _sepReaderSymbol) ||
-            !SymbolEqualityComparer.Default.Equals(methodSymbol.Parameters[1].Type, _cancellationTokenSymbol))
+        if (methodSymbol.Parameters.Length < 1 || methodSymbol.Parameters.Length > 2)
+        {
+            Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidMethodParameters, methodSyntax.ParameterList.GetLocation()));
+            return false;
+        }
+
+        if (!SymbolEqualityComparer.Default.Equals(methodSymbol.Parameters[0].Type, _sepReaderSymbol))
+        {
+            Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidMethodParameters, methodSyntax.ParameterList.GetLocation()));
+            isValid = false;
+        }
+
+        if (methodSymbol.Parameters.Length == 2 && !SymbolEqualityComparer.Default.Equals(methodSymbol.Parameters[1].Type, _cancellationTokenSymbol))
         {
             Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidMethodParameters, methodSyntax.ParameterList.GetLocation()));
             isValid = false;

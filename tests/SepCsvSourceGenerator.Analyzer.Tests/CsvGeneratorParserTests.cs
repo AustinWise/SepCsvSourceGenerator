@@ -136,7 +136,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                 public partial class MyRecord
                 {
                     [GenerateCsvParser]
-                    public static partial IAsyncEnumerable<MyRecord> Parse(SepReader reader);
+                    public static partial IAsyncEnumerable<MyRecord> Parse();
                 }
             ");
 
