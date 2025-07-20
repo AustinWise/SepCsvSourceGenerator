@@ -25,7 +25,9 @@ namespace Test
             {
                 ct.ThrowIfCancellationRequested();
 
-                global::Test.MyRecordStruct ret = new global::Test.MyRecordStruct();
+                global::Test.MyRecordStruct ret = new global::Test.MyRecordStruct()
+                {
+                };
                 if (NameNdx != -1)
                 {
                     ret.Name = row[NameNdx].Span.ToString();

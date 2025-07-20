@@ -23,7 +23,9 @@ public partial class MyGlobalRecord
         {
             ct.ThrowIfCancellationRequested();
 
-            global::MyGlobalRecord ret = new global::MyGlobalRecord();
+            global::MyGlobalRecord ret = new global::MyGlobalRecord()
+            {
+            };
             if (NameNdx != -1)
             {
                 ret.Name = row[NameNdx].Span.ToString();

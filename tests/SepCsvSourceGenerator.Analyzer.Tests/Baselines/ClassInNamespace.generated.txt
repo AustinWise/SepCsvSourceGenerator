@@ -25,7 +25,9 @@ namespace My.Awesome.Namespace
             {
                 ct.ThrowIfCancellationRequested();
 
-                global::My.Awesome.Namespace.MyRecordInNamespace ret = new global::My.Awesome.Namespace.MyRecordInNamespace();
+                global::My.Awesome.Namespace.MyRecordInNamespace ret = new global::My.Awesome.Namespace.MyRecordInNamespace()
+                {
+                };
                 if (NameNdx != -1)
                 {
                     ret.Name = row[NameNdx].Span.ToString();

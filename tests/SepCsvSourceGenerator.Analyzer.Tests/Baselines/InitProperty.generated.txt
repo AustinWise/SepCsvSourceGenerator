@@ -25,9 +25,9 @@ namespace Test
             {
                 ct.ThrowIfCancellationRequested();
 
-                global::Test.MyRecordWithRequired ret = new global::Test.MyRecordWithRequired
+                global::Test.MyRecordWithRequired ret = new global::Test.MyRecordWithRequired()
                 {
-                    Name = (NameNdx != -1) ? row[NameNdx].Span.ToString() : default(string)
+                    Name = (NameNdx != -1) ? row[NameNdx].Span.ToString() : default,
                 };
                 yield return ret;
             }

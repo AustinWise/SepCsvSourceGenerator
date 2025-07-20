@@ -191,46 +191,29 @@ internal sealed class Emitter
         var initializerProps = methodDef.PropertiesToParse.Where(p => p.IsRequiredMember || p.IsInitOnly).ToList();
         var otherProps = methodDef.PropertiesToParse.Where(p => !p.IsRequiredMember && !p.IsInitOnly).ToList();
 
-        var retLine = new StringBuilder();
-        retLine.Append($"{itemTypeName} ret = new {itemTypeName}");
-
-        if (initializerProps.Count != 0)
+        AppendLine($"{itemTypeName} ret = new {itemTypeName}()");
+        AppendLine("{");
+        IncreaseIndent();
+        foreach (var prop in methodDef.PropertiesToParse.Where(MustAssignInObjectInitializer))
         {
-            AppendLine(retLine.ToString());
-            AppendLine("{");
-            IncreaseIndent();
-            for (int i = 0; i < initializerProps.Count; i++)
+            var propLine = new StringBuilder();
+            propLine.Append(prop.Name).Append(" = ");
+            if (!prop.IsRequiredMember)
             {
-                var prop = initializerProps[i];
-                var expression = GetParseExpression(prop, $"{prop.Name}Ndx");
-                var propLine = new StringBuilder();
-                propLine.Append(prop.Name).Append(" = ");
-                if (!prop.IsRequiredMember)
-                {
-                    propLine.Append($"({prop.Name}Ndx != -1) ? ");
-                }
-                propLine.Append(expression);
-                if (!prop.IsRequiredMember)
-                {
-                    propLine.Append($" : default({prop.FullTypeName})");
-                }
-
-                if (i < initializerProps.Count - 1)
-                {
-                    propLine.Append(',');
-                }
-                AppendLine(propLine.ToString());
+                propLine.Append($"({prop.Name}Ndx != -1) ? ");
             }
-            DecreaseIndent();
-            AppendLine("};");
+            propLine.Append(GetParseExpression(prop, $"{prop.Name}Ndx"));
+            if (!prop.IsRequiredMember)
+            {
+                propLine.Append($" : default");
+            }
+            propLine.Append(',');
+            AppendLine(propLine.ToString());
         }
-        else
-        {
-            retLine.Append("();");
-            AppendLine(retLine.ToString());
-        }
+        DecreaseIndent();
+        AppendLine("};");
 
-        foreach (var prop in otherProps)
+        foreach (var prop in methodDef.PropertiesToParse.Where(p => !MustAssignInObjectInitializer(p)))
         {
             AppendLine($"if ({prop.Name}Ndx != -1)");
             AppendLine("{");
@@ -245,6 +228,11 @@ internal sealed class Emitter
         AppendLine("}"); // end foreach
         DecreaseIndent();
         AppendLine("}"); // end method
+    }
+
+    private static bool MustAssignInObjectInitializer(CsvPropertyDefinition def)
+    {
+        return def.IsInitOnly || def.IsRequiredMember;
     }
 
     private static string GetParseExpression(CsvPropertyDefinition prop, string indexVarName)

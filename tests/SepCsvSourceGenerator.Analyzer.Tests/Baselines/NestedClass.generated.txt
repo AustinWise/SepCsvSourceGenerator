@@ -27,7 +27,9 @@ namespace Test
                 {
                     ct.ThrowIfCancellationRequested();
 
-                    global::Test.OuterClass.NestedClass ret = new global::Test.OuterClass.NestedClass();
+                    global::Test.OuterClass.NestedClass ret = new global::Test.OuterClass.NestedClass()
+                    {
+                    };
                     if (NameNdx != -1)
                     {
                         ret.Name = row[NameNdx].Span.ToString();

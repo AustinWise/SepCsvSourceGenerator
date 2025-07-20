@@ -30,7 +30,9 @@ namespace Test
             {
                 ct.ThrowIfCancellationRequested();
 
-                global::Test.MyGenericRecord<T> ret = new global::Test.MyGenericRecord<T>();
+                global::Test.MyGenericRecord<T> ret = new global::Test.MyGenericRecord<T>()
+                {
+                };
                 if (NameNdx != -1)
                 {
                     ret.Name = row[NameNdx].Span.ToString();

@@ -25,7 +25,9 @@ namespace Test
             {
                 ct.ThrowIfCancellationRequested();
 
-                global::Test.MyRecord ret = new global::Test.MyRecord();
+                global::Test.MyRecord ret = new global::Test.MyRecord()
+                {
+                };
                 if (DateNdx != -1)
                 {
                     ret.Date = global::System.DateTime.ParseExact(row[DateNdx].Span, "yyyy-MM-dd", CultureInfo.InvariantCulture);
