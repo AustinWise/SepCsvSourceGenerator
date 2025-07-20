@@ -1,5 +1,4 @@
 using nietras.SeparatedValues;
-using AWise.SepCsvSourceGenerator;
 
 namespace AWise.SepCsvSourceGenerator.Analyzer.Tests;
 
@@ -70,6 +69,51 @@ public partial class RunGeneratedParserTests
         Assert.Equal(123, item2.NullableInt);
         Assert.Null(item2.MissingField);
     }
+
+    [Fact]
+    public void CancelEnumeration()
+    {
+        using var reader = Sep.Reader().FromText(CSV_CONTENT);
+        using var cts = new CancellationTokenSource();
+        IEnumerable<MyRecord> enumerable = MyRecord.Parse(reader, cts.Token);
+        IEnumerator<MyRecord> enumerator = enumerable.GetEnumerator();
+        Assert.True(enumerator.MoveNext());
+        cts.Cancel();
+        try
+        {
+            enumerator.MoveNext();
+            Assert.Fail("Expected exception");
+        }
+        catch (OperationCanceledException ex)
+        {
+            Assert.Equal(cts.Token, ex.CancellationToken);
+        }
+        enumerator.Dispose();
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task CancelEnumerationAsync(bool tokenInParseAsync, bool tokenInGetAsyncEnumerator)
+    {
+        using var reader = Sep.Reader().FromText(CSV_CONTENT);
+        using var cts = new CancellationTokenSource();
+        IAsyncEnumerable<MyRecord> enumerable = MyRecord.ParseAsync(reader, tokenInParseAsync ? cts.Token : default);
+        IAsyncEnumerator<MyRecord> enumerator = enumerable.GetAsyncEnumerator(tokenInGetAsyncEnumerator ? cts.Token : default);
+        Assert.True(await enumerator.MoveNextAsync());
+        cts.Cancel();
+        try
+        {
+            await enumerator.MoveNextAsync();
+            Assert.Fail("Expected exception");
+        }
+        catch (OperationCanceledException ex)
+        {
+            Assert.Equal(cts.Token, ex.CancellationToken);
+        }
+        await enumerator.DisposeAsync();
+    }
 }
 
 public partial class RunGeneratedParserTests_WithNewDateTypes
@@ -92,7 +136,7 @@ public partial class RunGeneratedParserTests_WithNewDateTypes
         public DateTimeOffset Dto { get; set; }
 
         [GenerateCsvParser]
-        public static partial IEnumerable<MyRecordWithNewDates> Parse(SepReader reader, CancellationToken ct);
+        public static partial IEnumerable<MyRecordWithNewDates> Parse(SepReader reader);
     }
 
     const string CSV_CONTENT = "ID,Date,Time,Offset\n1,2024-01-01,13:14:15.123,2024-05-10T10:00:00.0000000-05:00";
@@ -101,7 +145,7 @@ public partial class RunGeneratedParserTests_WithNewDateTypes
     public void Parse()
     {
         using var reader = Sep.Reader().FromText(CSV_CONTENT);
-        var list = MyRecordWithNewDates.Parse(reader, CancellationToken.None).ToList();
+        var list = MyRecordWithNewDates.Parse(reader).ToList();
         var item1 = Assert.Single(list);
 
         Assert.Equal(1, item1.Id);
