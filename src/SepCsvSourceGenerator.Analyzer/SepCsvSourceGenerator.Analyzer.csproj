@@ -13,6 +13,7 @@
         <!-- Version of releases is set based on tag name. -->
         <Version>0.0.1</Version>
         <DebugType>embedded</DebugType>
+        <IsRoslynComponent>true</IsRoslynComponent>
     </PropertyGroup>
 
     <PropertyGroup Label="Nuget stuff">

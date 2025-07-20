@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Debug-Test-Compilation": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\..\\tests\\SepCsvSourceGenerator.Analyzer.Tests\\SepCsvSourceGenerator.Analyzer.Tests.csproj"
+    }
+  }
+}
