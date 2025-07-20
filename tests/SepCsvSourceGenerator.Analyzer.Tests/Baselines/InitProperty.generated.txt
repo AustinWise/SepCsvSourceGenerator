@@ -14,7 +14,7 @@ namespace Test
 
             if (!reader.Header.TryIndexOf("Name", out NameNdx))
             {
-                throw new global::System.ArgumentException($"Missing required column 'Name' for required property 'Name'.");
+                NameNdx = -1;
             }
 
             await foreach (SepReader.Row row in reader
@@ -27,7 +27,7 @@ namespace Test
 
                 global::Test.MyRecordWithRequired ret = new global::Test.MyRecordWithRequired
                 {
-                    Name = row[NameNdx].Span.ToString()
+                    Name = (NameNdx != -1) ? row[NameNdx].Span.ToString() : default(string)
                 };
                 yield return ret;
             }

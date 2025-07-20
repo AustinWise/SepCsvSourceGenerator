@@ -1,4 +1,4 @@
-﻿namespace AWise.SepCsvSourceGenerator;
+namespace AWise.SepCsvSourceGenerator;
 
 internal record CsvPropertyDefinition(
     string Name,
@@ -7,4 +7,5 @@ internal record CsvPropertyDefinition(
     string HeaderName,
     string? DateFormat,
     bool IsRequiredMember,
+    bool IsInitOnly,
     CsvPropertyKind Kind);

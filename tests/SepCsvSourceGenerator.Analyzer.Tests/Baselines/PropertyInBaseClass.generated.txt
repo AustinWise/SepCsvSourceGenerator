@@ -30,7 +30,7 @@ namespace Test
             {
                 ct.ThrowIfCancellationRequested();
 
-                global::Test.DerivedRecord ret = new global::Test.DerivedRecord()
+                global::Test.DerivedRecord ret = new global::Test.DerivedRecord
                 {
                     DerivedName = row[DerivedNameNdx].Span.ToString(),
                     BaseName = row[BaseNameNdx].Span.ToString()

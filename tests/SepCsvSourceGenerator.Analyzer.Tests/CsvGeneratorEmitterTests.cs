@@ -174,7 +174,7 @@ namespace Test
         }
 
 
-        [Fact(Skip = "Does not generate valid code.")]
+        [Fact]
         public void Emitter_GeneratesCorrectCode_ForInitProperty()
         {
             var source = @"

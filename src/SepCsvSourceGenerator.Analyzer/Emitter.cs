@@ -188,31 +188,49 @@ internal sealed class Emitter
         AppendLine("ct.ThrowIfCancellationRequested();");
         AppendLine("");
 
-        var retLine = new StringBuilder();
-        retLine.Append($"{itemTypeName} ret = new {itemTypeName}()");
+        var initializerProps = methodDef.PropertiesToParse.Where(p => p.IsRequiredMember || p.IsInitOnly).ToList();
+        var otherProps = methodDef.PropertiesToParse.Where(p => !p.IsRequiredMember && !p.IsInitOnly).ToList();
 
-        var requiredProps = methodDef.PropertiesToParse.Where(p => p.IsRequiredMember).ToList();
-        if (requiredProps.Count != 0)
+        var retLine = new StringBuilder();
+        retLine.Append($"{itemTypeName} ret = new {itemTypeName}");
+
+        if (initializerProps.Count != 0)
         {
             AppendLine(retLine.ToString());
             AppendLine("{");
             IncreaseIndent();
-            for (int i = 0; i < requiredProps.Count; i++)
+            for (int i = 0; i < initializerProps.Count; i++)
             {
-                var prop = requiredProps[i];
-                AppendLine($"{prop.Name} = {GetParseExpression(prop, $"{prop.Name}Ndx")}" + (i < requiredProps.Count - 1 ? "," : ""));
+                var prop = initializerProps[i];
+                var expression = GetParseExpression(prop, $"{prop.Name}Ndx");
+                var propLine = new StringBuilder();
+                propLine.Append(prop.Name).Append(" = ");
+                if (!prop.IsRequiredMember)
+                {
+                    propLine.Append($"({prop.Name}Ndx != -1) ? ");
+                }
+                propLine.Append(expression);
+                if (!prop.IsRequiredMember)
+                {
+                    propLine.Append($" : default({prop.FullTypeName})");
+                }
+
+                if (i < initializerProps.Count - 1)
+                {
+                    propLine.Append(',');
+                }
+                AppendLine(propLine.ToString());
             }
             DecreaseIndent();
             AppendLine("};");
         }
         else
         {
-            retLine.Append(';');
+            retLine.Append("();");
             AppendLine(retLine.ToString());
         }
 
-
-        foreach (var prop in methodDef.PropertiesToParse.Where(p => !p.IsRequiredMember))
+        foreach (var prop in otherProps)
         {
             AppendLine($"if ({prop.Name}Ndx != -1)");
             AppendLine("{");
