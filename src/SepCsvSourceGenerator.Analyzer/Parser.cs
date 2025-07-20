@@ -60,7 +60,8 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                 continue;
             }
 
-            if (!methodSymbol.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, _generateCsvParserAttributeSymbol)))
+            AttributeData? generateCsvAttr = methodSymbol.GetAttributes().Where(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, _generateCsvParserAttributeSymbol)).FirstOrDefault();
+            if (generateCsvAttr == null)
             {
                 // TODO: throw an exception or log a diagnostic? This should not happen.
                 Debug.Fail("Method marked with [GenerateCsvParser] should not be processed here.");
@@ -83,6 +84,26 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                 continue;
             }
 
+            bool includeAllProperties = false;
+            foreach (var arg in generateCsvAttr.NamedArguments)
+            {
+                if (arg.Key == "IncludeProperties")
+                {
+                    if (arg.Value.Kind == TypedConstantKind.Primitive && arg.Value.Value is bool b)
+                    {
+                        includeAllProperties = b;
+                    }
+                    else
+                    {
+                        Debug.Fail("Wrong type?");
+                    }
+                }
+                else
+                {
+                    Debug.Fail("Unexpected named argument on GenerateCsvParser: " + arg.Key);
+                }
+            }
+
             var propertiesToParse = new List<CsvPropertyDefinition>();
             var currentType = itemTypeSymbol;
             var seenProperties = new HashSet<string>();
@@ -95,14 +116,14 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                     if (propertySymbol.IsStatic || propertySymbol.SetMethod == null) continue; // Must be instance property with a setter/init
                     AttributeData? headerAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
                         SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvHeaderNameAttributeSymbol));
-                    if (headerAttr is null) continue;
+                    if (headerAttr is null && !includeAllProperties) continue;
                     if (!seenProperties.Add(propertySymbol.Name)) continue; // Property already seen in a more derived type
 
                     // From here on, if we use "continue" we must raise a diagnostic.
                     // This ensures we will either get NoPropertiesFound or some other diagnostic if something is wrong.
 
-                    string? headerName = null;
-                    if (headerAttr.ConstructorArguments.Length == 1)
+                    string? headerName = propertySymbol.Name;
+                    if (headerAttr != null && headerAttr.ConstructorArguments.Length == 1)
                     {
                         headerName = headerAttr.ConstructorArguments[0].Value as string;
                     }
@@ -116,8 +137,7 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                     string? dateFormat = null;
                     var kind = CsvPropertyKind.SpanParsable;
 
-                    ITypeSymbol underlyingType;
-                    bool isNullableType = IsNullableType(propertySymbol.Type, out underlyingType);
+                    bool isNullableType = IsNullableType(propertySymbol.Type, out ITypeSymbol underlyingType);
 
                     bool isDateOrTime = SymbolEqualityComparer.Default.Equals(underlyingType, _dateTimeSymbol) ||
                                         SymbolEqualityComparer.Default.Equals(underlyingType, _dateTimeOffsetSymbol) ||

@@ -296,6 +296,30 @@ public partial class MyGlobalRecord
         }
 
         [Fact]
+        public void Emitter_GeneratesCorrectCode_ForIncludeProperties()
+        {
+            var source = @"
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using AWise.SepCsvSourceGenerator;
+using nietras.SeparatedValues;
+
+public partial class MyGlobalRecord
+{
+    [CsvHeaderName(""Name"")]
+    public string Name { get; set; }
+
+    public string UnrelatedProperty { get; set; }
+
+    [GenerateCsvParser(IncludeProperties = true)]
+    public static partial IEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
+}
+";
+            RunTestAsync(source, "IncludeProperties.generated.txt");
+        }
+
+        [Fact]
         public void Emitter_GeneratesCorrectCode_ForDifferentModifiers()
         {
             var source = @"

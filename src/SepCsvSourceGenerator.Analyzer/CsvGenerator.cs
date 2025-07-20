@@ -21,14 +21,20 @@ public partial class CsvGenerator : IIncrementalGenerator
                     [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
                     internal abstract class CsvAttribute : global::System.Attribute { }
 
+                    /// <summary>
+                    /// For date and time types, this specifies the format string used with <c>ParseExact</c>.
+                    /// </summary>
                     [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
                     [global::System.AttributeUsage(global::System.AttributeTargets.Property | global::System.AttributeTargets.Field, AllowMultiple = false)]
                     internal sealed class CsvDateFormatAttribute : CsvAttribute
                     {
-                        public CsvDateFormatAttribute(string format) { Format = format; }
+                        public CsvDateFormatAttribute([global::System.Diagnostics.CodeAnalysis.StringSyntax("DateTimeFormat")] string format) { Format = format; }
                         public string Format { get; }
                     }
 
+                    /// <summary>
+                    /// The name of the column in the CSV file header this property is mapped to.
+                    /// </summary>
                     [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
                     [global::System.AttributeUsage(global::System.AttributeTargets.Property | global::System.AttributeTargets.Field, AllowMultiple = false)]
                     internal sealed class CsvHeaderNameAttribute : CsvAttribute
@@ -44,6 +50,12 @@ public partial class CsvGenerator : IIncrementalGenerator
                         public GenerateCsvParserAttribute()
                         {
                         }
+
+                        /// <summary>
+                        /// If true, automatically map all public properties.
+                        /// If false, only properties marked with <see cref="CsvHeaderNameAttribute" /> are mapped.
+                        /// </summary>
+                        public bool IncludeProperties { get; set; }
                     }
                 }
                 """, Encoding.UTF8));
