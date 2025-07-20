@@ -43,6 +43,13 @@ public partial class CsvGenerator : IIncrementalGenerator
                         public string Name { get; }
                     }
 
+                    /// <summary>
+                    /// When placed on a partial method declaration, generates a CSV parser.
+                    /// </summary>
+                    /// <remarks>
+                    /// The return type of the method must be either <c>IEnumerable&lt;T&gt;</c> or <c>IAsyncEnumerable&lt;T&gt;</c>.
+                    /// The first parameter must be a <c>SepReader</c>. Optionally, the second parameter can be a <c>CancellationToken</c>.
+                    /// </remarks>
                     [global::Microsoft.CodeAnalysis.EmbeddedAttribute]
                     [global::System.AttributeUsage(global::System.AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
                     internal sealed class GenerateCsvParserAttribute : CsvAttribute
