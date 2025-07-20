@@ -14,7 +14,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
             LanguageVersion languageVersion = LanguageVersion.Default)
         {
             var compilation = CreateCompilation(sources, additionalReferences, languageVersion);
-            var (outputCompilation, generatorDiagnostics) = RunGenerator(compilation, generator);
+            var (outputCompilation, diagnostics) = RunGenerator(compilation, generator);
             var generatedSources = outputCompilation.SyntaxTrees
                 .Where(t => !compilation.SyntaxTrees.Any(t2 => t2.FilePath == t.FilePath))
                 .Select(t => new GeneratedSourceResult(
@@ -23,18 +23,17 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                     t.GetText().ToString()))
                 .ToImmutableArray();
 
-            var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
-            diagnostics.AddRange(outputCompilation.GetDiagnostics().Where(d => d.DefaultSeverity >= DiagnosticSeverity.Warning));
-            diagnostics.AddRange(generatorDiagnostics);
-
-            return (diagnostics.ToImmutableArray(), generatedSources);
+            return (diagnostics, generatedSources);
         }
 
         public static (Compilation, ImmutableArray<Diagnostic>) RunGenerator(Compilation compilation, IIncrementalGenerator generator)
         {
             var driver = CSharpGeneratorDriver.Create(generator);
-            driver.RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out var diagnostics, CancellationToken.None);
-            return (outputCompilation, diagnostics);
+            driver.RunGeneratorsAndUpdateCompilation(compilation, out var outputCompilation, out var generatorDiagnostics, CancellationToken.None);
+            var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
+            diagnostics.AddRange(outputCompilation.GetDiagnostics().Where(d => d.DefaultSeverity >= DiagnosticSeverity.Warning));
+            diagnostics.AddRange(generatorDiagnostics);
+            return (outputCompilation, diagnostics.ToImmutableArray());
         }
 
         public static Compilation CreateCompilation(

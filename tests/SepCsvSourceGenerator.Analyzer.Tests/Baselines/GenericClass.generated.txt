@@ -19,7 +19,7 @@ namespace Test
             }
             if (!reader.Header.TryIndexOf("Value", out ValueNdx))
             {
-                ValueNdx = -1;
+                throw new global::System.ArgumentException($"Missing required column 'Value' for required property 'Value'.");
             }
 
             await foreach (SepReader.Row row in reader
@@ -32,14 +32,11 @@ namespace Test
 
                 global::Test.MyGenericRecord<T> ret = new global::Test.MyGenericRecord<T>()
                 {
+                    Value = T.Parse(row[ValueNdx].Span, CultureInfo.InvariantCulture),
                 };
                 if (NameNdx != -1)
                 {
                     ret.Name = row[NameNdx].Span.ToString();
-                }
-                if (ValueNdx != -1)
-                {
-                    ret.Value = T.Parse(row[ValueNdx].Span, CultureInfo.InvariantCulture);
                 }
                 yield return ret;
             }

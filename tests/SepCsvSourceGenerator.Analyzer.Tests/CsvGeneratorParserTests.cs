@@ -14,7 +14,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                 public partial class MyRecord
                 {
                     [CsvHeaderName(""Name"")]
-                    public string Name { get; set; }
+                    public string? Name { get; set; }
 
                     [CsvHeaderName(""Date"")]
                     [CsvDateFormat(""yyyy-MM-dd"")]
@@ -35,7 +35,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                 public partial class MyRecord
                 {
                     [CsvHeaderName(""Name"")]
-                    public string Name { get; set; }
+                    public string? Name { get; set; }
 
                     [CsvHeaderName(""Date"")]
                     [CsvDateFormat(""yyyy-MM-dd"")]
@@ -50,13 +50,35 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
+        public void InitNonNullableNonRequiredPropertyGeneratesWarning()
+        {
+            var diagnostics = RunGenerator(@"
+                public partial class MyRecord
+                {
+                    [CsvHeaderName(""Name"")]
+                    public string Name { get; init; }
+
+                    [GenerateCsvParser]
+                    public partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
+                }
+            ");
+
+            // We let the compile generate a warning here, since it's error message tells the user how to resolve the problem.
+            Assert.Equal(2, diagnostics.Length);
+            // Possible null reference assignment.
+            Assert.True(diagnostics.Any(d => d.Id == "CS8601"));
+            // Non-nullable property 'Name' must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring the property as nullable.
+            Assert.True(diagnostics.Any(d => d.Id == "CS8618"));
+        }
+
+        [Fact]
         public void MethodNotPartial()
         {
             var diagnostics = RunGenerator(@"
                 public partial class MyRecord
                 {
                     [GenerateCsvParser]
-                    public static IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken) => default;
+                    public static IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken) => throw new Exception();
                 }
             ");
 
@@ -75,8 +97,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                 }
             ");
 
-            Assert.Single(diagnostics);
-            Assert.Equal("CSVGEN002", diagnostics[0].Id);
+            Assert.True(diagnostics.Any(d => d.Id == "CSVGEN002"));
         }
 
         [Fact]
@@ -90,8 +111,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                 }
             ");
 
-            Assert.Single(diagnostics);
-            Assert.Equal("CSVGEN002", diagnostics[0].Id);
+            Assert.True(diagnostics.Any(d => d.Id == "CSVGEN002"));
         }
 
         [Fact]
@@ -120,8 +140,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                 }
             ");
 
-            Assert.Single(diagnostics);
-            Assert.Equal("CSVGEN003", diagnostics[0].Id);
+            Assert.True(diagnostics.Any(d => d.Id == "CSVGEN003"));
         }
 
         [Fact]
@@ -149,10 +168,10 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                 public partial class MyRecord
                 {
                     [CsvHeaderName(""Valid"")]
-                    public string Valid { get; set; }
+                    public string? Valid { get; set; }
 
                     [CsvHeaderName("""")]
-                    public string Invalid { get; set; }
+                    public string? Invalid { get; set; }
 
                     [GenerateCsvParser]
                     public static partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
@@ -177,9 +196,9 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                 }
             ", includeSepRef: false);
 
-            Assert.Single(diagnostics);
-            Assert.Equal("CSVGEN005", diagnostics[0].Id);
-            Assert.Equal("Essential types for source generation were not found: SepReader", diagnostics[0].GetMessage());
+
+            var diag = diagnostics.Where(d => d.Id == "CSVGEN005").Single();
+            Assert.Equal("Essential types for source generation were not found: SepReader", diag.GetMessage());
         }
 
         [Fact]
@@ -198,8 +217,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                 }
             ");
 
-            Assert.Single(diagnostics);
-            Assert.Equal("CSVGEN008", diagnostics[0].Id);
+            Assert.True(diagnostics.Any(d => d.Id == "CSVGEN008"));
         }
 
         private static ImmutableArray<Diagnostic> RunGenerator(
@@ -207,6 +225,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
             bool wrap = true,
             bool includeSepRef = true)
         {
+            code = "#nullable enable\n" + code;
             var text = code;
             if (wrap)
             {

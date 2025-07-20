@@ -138,7 +138,7 @@ namespace My.Awesome.Namespace
     public partial class MyRecordInNamespace
     {
         [CsvHeaderName(""Name"")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [GenerateCsvParser]
         public static partial IAsyncEnumerable<MyRecordInNamespace> ParseRecords(SepReader reader, CancellationToken cancellationToken);
@@ -189,7 +189,7 @@ namespace Test
     public partial class MyRecordWithRequired
     {
         [CsvHeaderName(""Name"")]
-        public string Name { get; init; }
+        public string? Name { get; init; }
 
         [GenerateCsvParser]
         public static partial IAsyncEnumerable<MyRecordWithRequired> ParseRecords(SepReader reader, CancellationToken cancellationToken);
@@ -216,7 +216,7 @@ namespace Test
         public partial class NestedClass
         {
             [CsvHeaderName(""Name"")]
-            public string Name { get; set; }
+            public string? Name { get; set; }
 
             [GenerateCsvParser]
             public static partial IAsyncEnumerable<NestedClass> ParseRecords(SepReader reader, CancellationToken cancellationToken);
@@ -262,7 +262,7 @@ using nietras.SeparatedValues;
 public partial class MyGlobalRecord
 {
     [CsvHeaderName(""Name"")]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     [GenerateCsvParser]
     public static partial IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
@@ -284,9 +284,9 @@ using nietras.SeparatedValues;
 public partial class MyGlobalRecord
 {
     [CsvHeaderName(""Name"")]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
-    public string UnrelatedProperty { get; set; }
+    public string? UnrelatedProperty { get; set; }
 
     [GenerateCsvParser]
     public static partial IEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
@@ -308,9 +308,9 @@ using nietras.SeparatedValues;
 public partial class MyGlobalRecord
 {
     [CsvHeaderName(""Name"")]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
-    public string UnrelatedProperty { get; set; }
+    public string? UnrelatedProperty { get; set; }
 
     [GenerateCsvParser(IncludeProperties = true)]
     public static partial IEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
@@ -337,7 +337,7 @@ public abstract class MyBaseClass
 public partial class MyGlobalRecord : MyBaseClass
 {
     [CsvHeaderName(""Name"")]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     [GenerateCsvParser]
     protected override partial IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReader reader, CancellationToken cancellationToken);
@@ -361,10 +361,10 @@ namespace Test
     public partial class MyGenericRecord<T> where T : ISpanParsable<T>
     {
         [CsvHeaderName(""Name"")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [CsvHeaderName(""Value"")]
-        public T Value { get; set; }
+        public required T Value { get; set; }
 
         [GenerateCsvParser]
         public static partial IAsyncEnumerable<MyGenericRecord<T>> ParseRecords(SepReader reader, CancellationToken cancellationToken);
@@ -376,6 +376,7 @@ namespace Test
 
         private static void RunTestAsync(string source, string baselineFileName)
         {
+            source = "#nullable enable\n" + source;
             var refs = new[]
             {
                 typeof(SepReader).Assembly,

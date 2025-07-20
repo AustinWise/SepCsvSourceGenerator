@@ -197,17 +197,9 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
 
             if (seenProperties.Count == 0)
             {
-                // We did not see any properties marked with the CsvHeaderName attribute.
+                // We did not find any any properties to parse.
                 // That's was probably a mistake.
                 Diag(Diagnostic.Create(DiagnosticDescriptors.NoPropertiesFound, methodSyntax.Identifier.GetLocation(), itemTypeSymbol.Name));
-                continue;
-            }
-
-            if (propertiesToParse.Count == 0)
-            {
-                // If we saw property but it had something wrong with it, we should have already raised a diagnostic.
-                // So we silently continue.
-                continue;
             }
 
             results.Add(new CsvMethodDefinition(methodSymbol, containingClassSymbol, itemTypeSymbol, isAsync, [.. propertiesToParse]));
