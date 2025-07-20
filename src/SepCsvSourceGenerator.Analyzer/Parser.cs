@@ -122,13 +122,32 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                     // From here on, if we use "continue" we must raise a diagnostic.
                     // This ensures we will either get NoPropertiesFound or some other diagnostic if something is wrong.
 
-                    string? headerName = propertySymbol.Name;
-                    if (headerAttr != null && headerAttr.ConstructorArguments.Length == 1)
+                    string[] headerNames;
+                    if (headerAttr is not null)
                     {
-                        headerName = headerAttr.ConstructorArguments[0].Value as string;
+                        if (headerAttr.ConstructorArguments.Length == 1 &&
+                            headerAttr.ConstructorArguments[0].Kind == TypedConstantKind.Array)
+                        {
+                            var values = headerAttr.ConstructorArguments[0].Values;
+                            if (values.IsDefaultOrEmpty)
+                            {
+                                Diag(Diagnostic.Create(DiagnosticDescriptors.HeaderNamesEmpty, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name));
+                                continue;
+                            }
+                            headerNames = [.. values.Select(c => (string)c.Value!)];
+                        }
+                        else
+                        {
+                            Debug.Fail("There should be no non-array constructor for this attribute.");
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        headerNames = [propertySymbol.Name];
                     }
 
-                    if (string.IsNullOrWhiteSpace(headerName))
+                    if (headerNames.Any(string.IsNullOrWhiteSpace))
                     {
                         Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidHeaderName, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name));
                         continue;
@@ -185,7 +204,7 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                         propertySymbol.Name,
                         propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         underlyingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                        headerName!,
+                        headerNames,
                         dateFormat,
                         propertySymbol.IsRequired,
                         propertySymbol.SetMethod?.IsInitOnly ?? false,

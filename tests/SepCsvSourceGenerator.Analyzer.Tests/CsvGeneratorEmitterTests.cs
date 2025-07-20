@@ -424,6 +424,31 @@ namespace Test
             RunTestAsync(source, "OptionalCancellationToken.generated.txt");
         }
 
+        [Fact]
+        public void Emitter_GeneratesCorrectCode_ForMultipleHeaderNames()
+        {
+            var source = @"
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using AWise.SepCsvSourceGenerator;
+using nietras.SeparatedValues;
+
+namespace Test
+{
+    public partial class MyRecord
+    {
+        [CsvHeaderName(""Name"", ""Alias"")]
+        public required string Name { get; init; }
+
+        [GenerateCsvParser]
+        public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken ct);
+    }
+}
+";
+            RunTestAsync(source, "MultipleHeaderNames.generated.txt");
+        }
+
         private static void RunTestAsync(string source, string baselineFileName)
         {
             source = "#nullable enable\n" + source;

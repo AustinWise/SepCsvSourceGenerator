@@ -50,6 +50,41 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
+        public void ValidMultipleHeaderNames()
+        {
+            var diagnostics = RunGenerator(@"
+                public partial class MyRecord
+                {
+                    [CsvHeaderName(""a"", ""b"")]
+                    public string? Name { get; set; }
+
+                    [GenerateCsvParser]
+                    public partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
+                }
+            ");
+
+            Assert.Empty(diagnostics);
+        }
+
+        [Fact]
+        public void MissingHeaderNames()
+        {
+            var diagnostics = RunGenerator(@"
+                public partial class MyRecord
+                {
+                    [CsvHeaderName]
+                    public string? Name { get; set; }
+
+                    [GenerateCsvParser]
+                    public partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken cancellationToken);
+                }
+            ");
+
+            var diag = Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN009", diag.Id);
+        }
+
+        [Fact]
         public void InitNonNullableNonRequiredPropertyGeneratesWarning()
         {
             var diagnostics = RunGenerator(@"

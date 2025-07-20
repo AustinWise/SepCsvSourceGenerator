@@ -39,8 +39,7 @@ public partial class CsvGenerator : IIncrementalGenerator
                     [global::System.AttributeUsage(global::System.AttributeTargets.Property | global::System.AttributeTargets.Field, AllowMultiple = false)]
                     internal sealed class CsvHeaderNameAttribute : CsvAttribute
                     {
-                        public CsvHeaderNameAttribute(string name) { Name = name; }
-                        public string Name { get; }
+                        public CsvHeaderNameAttribute(params string[] names) { }
                     }
 
                     /// <summary>

@@ -4,7 +4,7 @@ internal record CsvPropertyDefinition(
     string Name,
     string FullTypeName, // e.g., "System.Nullable<System.Int32>"
     string UnderlyingTypeName, // e.g., "System.Int32"
-    string HeaderName,
+    string[] HeaderNames,
     string? DateFormat,
     bool IsRequiredMember,
     bool IsInitOnly,

@@ -8,7 +8,7 @@ public partial class RunGeneratedParserTests
     public class BaseRecord
     {
         [CsvHeaderName("ID")]
-        public int Id { get; set; }
+        public required int Id { get; init; }
     }
     public partial class MyRecord : BaseRecord
     {
@@ -71,6 +71,21 @@ public partial class RunGeneratedParserTests
     }
 
     [Fact]
+    public void MissingColumns()
+    {
+        using var reader = Sep.Reader().FromText("Name,Date,Enum,NullableInt\nJohn Doe,2023-01-15,A,42\nJane,2023-02-20,B,123");
+        try
+        {
+            MyRecord.Parse(reader, CancellationToken.None).ToList();
+            Assert.Fail("should throw");
+        }
+        catch (ArgumentException ex)
+        {
+            Assert.Equal("Missing required column 'ID' for required property 'Id'.", ex.Message);
+        }
+    }
+
+    [Fact]
     public void CancelEnumeration()
     {
         using var reader = Sep.Reader().FromText(CSV_CONTENT);
@@ -114,10 +129,7 @@ public partial class RunGeneratedParserTests
         }
         await enumerator.DisposeAsync();
     }
-}
 
-public partial class RunGeneratedParserTests_WithNewDateTypes
-{
     public partial class MyRecordWithNewDates
     {
         [CsvHeaderName("ID")]
@@ -139,12 +151,10 @@ public partial class RunGeneratedParserTests_WithNewDateTypes
         public static partial IEnumerable<MyRecordWithNewDates> Parse(SepReader reader);
     }
 
-    const string CSV_CONTENT = "ID,Date,Time,Offset\n1,2024-01-01,13:14:15.123,2024-05-10T10:00:00.0000000-05:00";
-
     [Fact]
-    public void Parse()
+    public void ParseNewDates()
     {
-        using var reader = Sep.Reader().FromText(CSV_CONTENT);
+        using var reader = Sep.Reader().FromText("ID,Date,Time,Offset\n1,2024-01-01,13:14:15.123,2024-05-10T10:00:00.0000000-05:00");
         var list = MyRecordWithNewDates.Parse(reader).ToList();
         var item1 = Assert.Single(list);
 
@@ -152,5 +162,40 @@ public partial class RunGeneratedParserTests_WithNewDateTypes
         Assert.Equal(new DateOnly(2024, 1, 1), item1.Date);
         Assert.Equal(new TimeOnly(13, 14, 15, 123), item1.Time);
         Assert.Equal(new DateTimeOffset(2024, 5, 10, 10, 0, 0, TimeSpan.FromHours(-5)), item1.Dto);
+    }
+
+    public partial class MyRecordWithAliasedColumns
+    {
+        [CsvHeaderName("a", "b")]
+        public required int Value { get; init; }
+
+        [GenerateCsvParser]
+        public static partial IEnumerable<MyRecordWithAliasedColumns> Parse(SepReader reader);
+    }
+
+    [Theory]
+    [InlineData("a\n1")]
+    [InlineData("b\n1")]
+    public void ParseAliasedColumns(string fileContents)
+    {
+        using var reader = Sep.Reader().FromText(fileContents);
+        var list = MyRecordWithAliasedColumns.Parse(reader).ToList();
+        var item1 = Assert.Single(list);
+        Assert.Equal(1, item1.Value);
+    }
+
+    [Fact]
+    public void MissingAliasedColumns()
+    {
+        using var reader = Sep.Reader().FromText("whoops,1");
+        try
+        {
+            MyRecordWithAliasedColumns.Parse(reader).ToList();
+            Assert.Fail("should throw");
+        }
+        catch (ArgumentException ex)
+        {
+            Assert.Equal("Missing required column with any of the following names: 'a', 'b' for required property 'Value'.", ex.Message);
+        }
     }
 }

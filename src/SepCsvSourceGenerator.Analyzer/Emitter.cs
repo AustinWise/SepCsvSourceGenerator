@@ -159,12 +159,28 @@ internal sealed class Emitter
         // Get header indices
         foreach (var prop in methodDef.PropertiesToParse)
         {
-            AppendLine($"if (!{methodDef.ReaderParameterName}.Header.TryIndexOf(\"{prop.HeaderName}\", out {prop.Name}Ndx))");
+            var tryFindIndex = string.Join(" || ", prop.HeaderNames.Select(h => $"{methodDef.ReaderParameterName}.Header.TryIndexOf(\"{h}\", out {prop.Name}Ndx)"));
+            if (prop.HeaderNames.Length == 1)
+            {
+                AppendLine($"if (!{tryFindIndex})");
+            }
+            else
+            {
+                AppendLine($"if (!({tryFindIndex}))");
+            }
             AppendLine("{");
             IncreaseIndent();
             if (prop.IsRequiredMember)
             {
-                AppendLine($"throw new global::System.ArgumentException($\"Missing required column '{prop.HeaderName}' for required property '{prop.Name}'.\");");
+                if (prop.HeaderNames.Length == 1)
+                {
+                    AppendLine($"throw new global::System.ArgumentException($\"Missing required column '{prop.HeaderNames[0]}' for required property '{prop.Name}'.\");");
+                }
+                else
+                {
+                    var headerNames = string.Join("', '", prop.HeaderNames);
+                    AppendLine($"throw new global::System.ArgumentException($\"Missing required column with any of the following names: '{headerNames}' for required property '{prop.Name}'.\");");
+                }
             }
             else
             {
