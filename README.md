@@ -12,6 +12,8 @@ dotnet add package Sep
 dotnet add package AWise.SepCsvSourceGenerator
 ```
 
+Note that this source generator requires the .NET SDK 9.0.300 or higher, which is included with Visual Studio 2022 v17.14 or higher.
+
 To use the source generator, define a partial class and a partial static method with the `[GenerateCsvParser]` attribute.
 The source generator will generate the implementation of this method.
 
