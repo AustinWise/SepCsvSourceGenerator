@@ -29,7 +29,13 @@ public partial class RunGeneratedParserTests
         public static partial IEnumerable<MyRecord> Parse(SepReader reader, CancellationToken ct);
 
         [GenerateCsvParser(IncludeProperties = true)]
+        public static partial IEnumerable<MyRecord> Parse(SepReaderHeader header, IEnumerable<SepReader.Row> reader, CancellationToken ct);
+
+        [GenerateCsvParser(IncludeProperties = true)]
         public static partial IAsyncEnumerable<MyRecord> ParseAsync(SepReader reader, CancellationToken ct);
+
+        [GenerateCsvParser(IncludeProperties = true)]
+        public static partial IAsyncEnumerable<MyRecord> ParseAsync(SepReaderHeader header, IAsyncEnumerable<SepReader.Row> reader, CancellationToken ct);
     }
 
     const string CSV_CONTENT = "ID,Name,Date,Enum,NullableInt\n1,John Doe,2023-01-15,A,42\n2,Jane,2023-02-20,B,123";
@@ -42,10 +48,26 @@ public partial class RunGeneratedParserTests
     }
 
     [Fact]
+    public void ParseEnumerable()
+    {
+        using var reader = Sep.Reader().FromText(CSV_CONTENT);
+        var rows = (IEnumerable<SepReader.Row>)reader;
+        Verify(MyRecord.Parse(reader.Header, rows, CancellationToken.None));
+    }
+
+    [Fact]
     public void ParseAsync()
     {
         using var reader = Sep.Reader().FromText(CSV_CONTENT);
         Verify(MyRecord.ParseAsync(reader, CancellationToken.None).ToBlockingEnumerable());
+    }
+
+    [Fact]
+    public void ParseAsyncEnumerable()
+    {
+        using var reader = Sep.Reader().FromText(CSV_CONTENT);
+        var rows = (IAsyncEnumerable<SepReader.Row>)reader;
+        Verify(MyRecord.ParseAsync(reader.Header, rows, CancellationToken.None).ToBlockingEnumerable());
     }
 
     private static void Verify(IEnumerable<MyRecord> enumerable)

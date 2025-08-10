@@ -6,18 +6,17 @@ using System.Runtime.CompilerServices;
 
 public partial class MyGlobalRecord
 {
-    public static partial System.Collections.Generic.IEnumerable<MyGlobalRecord> ParseRecords(nietras.SeparatedValues.SepReader reader, System.Threading.CancellationToken ct)
+    public static partial System.Collections.Generic.IEnumerable<MyGlobalRecord> ParseRecords(nietras.SeparatedValues.SepReaderHeader headerz, System.Collections.Generic.IEnumerable<nietras.SeparatedValues.SepReader.Row> reader)
     {
         int NameNdx;
 
-        if (!reader.Header.TryIndexOf("Name", out NameNdx))
+        if (!headerz.TryIndexOf("Name", out NameNdx))
         {
             NameNdx = -1;
         }
 
         foreach (SepReader.Row row in reader)
         {
-            ct.ThrowIfCancellationRequested();
 
             global::MyGlobalRecord ret = new global::MyGlobalRecord()
             {

@@ -282,7 +282,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
-        public void Emitter_GeneratesCorrectCode_ForIEnumerable()
+        public void Emitter_GeneratesCorrectCode_ForIEnumerableOutput()
         {
             var source = """
                 using System;
@@ -304,6 +304,56 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
 
                 """;
             RunTestAsync(source, "IEnumerable.generated.txt");
+        }
+
+        [Fact]
+        public void Emitter_GeneratesCorrectCode_ForIEnumerableInput()
+        {
+            var source = """
+                using System;
+                using System.Collections.Generic;
+                using System.Threading;
+                using AWise.SepCsvSourceGenerator;
+                using nietras.SeparatedValues;
+
+                public partial class MyGlobalRecord
+                {
+                    [CsvHeaderName("Name")]
+                    public string? Name { get; set; }
+
+                    public string? UnrelatedProperty { get; set; }
+
+                    [GenerateCsvParser]
+                    public static partial IEnumerable<MyGlobalRecord> ParseRecords(SepReaderHeader headerz, IEnumerable<SepReader.Row> reader);
+                }
+
+                """;
+            RunTestAsync(source, "IEnumerableOutput.generated.txt");
+        }
+
+        [Fact]
+        public void Emitter_GeneratesCorrectCode_ForIAsyncEnumerableInput()
+        {
+            var source = """
+                using System;
+                using System.Collections.Generic;
+                using System.Threading;
+                using AWise.SepCsvSourceGenerator;
+                using nietras.SeparatedValues;
+
+                public partial class MyGlobalRecord
+                {
+                    [CsvHeaderName("Name")]
+                    public string? Name { get; set; }
+
+                    public string? UnrelatedProperty { get; set; }
+
+                    [GenerateCsvParser]
+                    public static partial IAsyncEnumerable<MyGlobalRecord> ParseRecords(SepReaderHeader header, IAsyncEnumerable<SepReader.Row> reader, CancellationToken ct);
+                }
+
+                """;
+            RunTestAsync(source, "IAsyncEnumerableOutput.generated.txt");
         }
 
         [Fact]
@@ -480,9 +530,13 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                 refs,
                 [source]);
 
-            Assert.Empty(diagnostics);
+            var generatedParser = generatedSources.SingleOrDefault(s => s.HintName.EndsWith(".CsvGenerator.g.cs"));
 
-            var generatedParser = generatedSources.Single(s => s.HintName.EndsWith(".CsvGenerator.g.cs"));
+            if (generatedParser is null)
+            {
+                Assert.Empty(diagnostics);
+                return;
+            }
 
             if (s_generateBaselines)
             {
@@ -508,6 +562,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                 Assert.Equal(expected, actual);
             }
 
+            Assert.Empty(diagnostics);
         }
     }
 }

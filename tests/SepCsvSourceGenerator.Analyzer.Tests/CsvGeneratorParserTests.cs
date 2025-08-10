@@ -150,6 +150,24 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
+        public void UnexpectedParameterType()
+        {
+            var diagnostics = RunGenerator(@"
+                public partial class MyRecord
+                {
+                    [CsvHeaderName(""Name"")]
+                    public string? Name { get; set; }
+
+                    [GenerateCsvParser]
+                    public static partial IEnumerable<MyRecord> Parse(string unexpected, SepReader reader);
+                }
+            ");
+
+            var d = Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN010", d.Id);
+        }
+
+        [Fact]
         public void NoPropertiesFound()
         {
             var diagnostics = RunGenerator(@"
@@ -165,7 +183,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
         }
 
         [Fact]
-        public void InvalidParameters()
+        public void MissingParameters()
         {
             var diagnostics = RunGenerator(@"
                 public partial class MyRecord
@@ -175,7 +193,98 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
                 }
             ");
 
-            Assert.True(diagnostics.Any(d => d.Id == "CSVGEN003"));
+            var d = Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN011", d.Id);
+        }
+
+        [Fact]
+        public void DuplicateCancellationTokenParameter()
+        {
+            var diagnostics = RunGenerator(@"
+                public partial class MyRecord
+                {
+                    [GenerateCsvParser]
+                    public static partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, CancellationToken ct1, CancellationToken ct2);
+                }
+            ");
+
+            var d = Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN013", d.Id);
+        }
+
+        [Fact]
+        public void DuplicateHeaderParameter()
+        {
+            var diagnostics = RunGenerator(@"
+                public partial class MyRecord
+                {
+                    [GenerateCsvParser]
+                    public static partial IEnumerable<MyRecord> Parse(SepReaderHeader header1, SepReaderHeader header2, IEnumerable<SepReader.Row> records);
+                }
+            ");
+
+            var d = Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN014", d.Id);
+        }
+
+        [Fact]
+        public void DuplicateReaderParameter()
+        {
+            var diagnostics = RunGenerator(@"
+                public partial class MyRecord
+                {
+                    [GenerateCsvParser]
+                    public static partial IAsyncEnumerable<MyRecord> Parse(SepReader reader, SepReader reader2);
+                }
+            ");
+
+            var d = Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN015", d.Id);
+        }
+
+        [Fact]
+        public void MissingHeaderParameter()
+        {
+            var diagnostics = RunGenerator(@"
+                public partial class MyRecord
+                {
+                    [GenerateCsvParser]
+                    public static partial IEnumerable<MyRecord> Parse(IEnumerable<SepReader.Row> records);
+                }
+            ");
+
+            var d = Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN012", d.Id);
+        }
+
+        [Fact]
+        public void MismatchIAsyncEnumerable()
+        {
+            var diagnostics = RunGenerator(@"
+                public partial class MyRecord
+                {
+                    [GenerateCsvParser]
+                    public static partial IAsyncEnumerable<MyRecord> Parse(SepReaderHeader header, IEnumerable<SepReader.Row> records);
+                }
+            ");
+
+            var d = Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN016", d.Id);
+        }
+
+        [Fact]
+        public void MismatchIEnumerable()
+        {
+            var diagnostics = RunGenerator(@"
+                public partial class MyRecord
+                {
+                    [GenerateCsvParser]
+                    public static partial IEnumerable<MyRecord> Parse(SepReaderHeader header, IAsyncEnumerable<SepReader.Row> records);
+                }
+            ");
+
+            var d = Assert.Single(diagnostics);
+            Assert.Equal("CSVGEN017", d.Id);
         }
 
         [Fact]
@@ -233,7 +342,7 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
 
 
             var diag = diagnostics.Where(d => d.Id == "CSVGEN005").Single();
-            Assert.Equal("Essential types for source generation were not found: SepReader", diag.GetMessage());
+            Assert.Equal("Essential types for source generation were not found: SepReader, SepReader.Row, SepReaderHeader", diag.GetMessage());
         }
 
         [Fact]
@@ -298,7 +407,9 @@ namespace Test
             var compilation = RoslynTestUtils.CreateCompilation([text], refs);
             var (_, diagnostics) = RoslynTestUtils.RunGenerator(compilation, new CsvGenerator());
 
-            return diagnostics;
+            // CS8795: Partial method 'MyRecord.Parse(string, SepReader)' must have an implementation part because it has accessibility modifiers.
+            // We disable this error, because basically every negative case will have this error.
+            return [.. diagnostics.Where(d => d.Id != "CS8795")];
         }
     }
 }

@@ -8,7 +8,7 @@ namespace Test
 {
     public partial class DerivedRecord
     {
-        public static async partial global::System.Collections.Generic.IAsyncEnumerable<global::Test.DerivedRecord> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
+        public static async partial System.Collections.Generic.IAsyncEnumerable<Test.DerivedRecord> ParseRecords(nietras.SeparatedValues.SepReader reader, [EnumeratorCancellation] System.Threading.CancellationToken ct)
         {
             int DerivedNameNdx;
             int BaseNameNdx;

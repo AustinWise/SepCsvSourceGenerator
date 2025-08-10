@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace AWise.SepCsvSourceGenerator.Analyzer;
@@ -20,6 +21,8 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
     private readonly INamedTypeSymbol? _csvHeaderNameAttributeSymbol = compilation.GetTypeByMetadataName(GeneratorNamespace + ".CsvHeaderNameAttribute");
     private readonly INamedTypeSymbol? _csvDateFormatAttributeSymbol = compilation.GetTypeByMetadataName(GeneratorNamespace + ".CsvDateFormatAttribute");
     private readonly INamedTypeSymbol? _sepReaderSymbol = compilation.GetTypeByMetadataName("nietras.SeparatedValues.SepReader");
+    private readonly INamedTypeSymbol? _sepReaderRowSymbol = compilation.GetTypeByMetadataName("nietras.SeparatedValues.SepReader+Row");
+    private readonly INamedTypeSymbol? _sepReaderHeaderSymbol = compilation.GetTypeByMetadataName("nietras.SeparatedValues.SepReaderHeader");
     private readonly INamedTypeSymbol? _iAsyncEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IAsyncEnumerable`1");
     private readonly INamedTypeSymbol? _iEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IEnumerable`1");
     private readonly INamedTypeSymbol? _cancellationTokenSymbol = compilation.GetTypeByMetadataName("System.Threading.CancellationToken");
@@ -32,8 +35,34 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
     private readonly INamedTypeSymbol? _enumSymbol = compilation.GetTypeByMetadataName("System.Enum");
     private readonly INamedTypeSymbol? _iSpanParsableSymbol = compilation.GetTypeByMetadataName("System.ISpanParsable`1");
 
+    private INamedTypeSymbol? _iEnumerableSymbolOfRow;
+    private INamedTypeSymbol IEnumerableSymbolOfRow
+    {
+        get
+        {
+            if (_iEnumerableSymbolOfRow != null)
+                return _iEnumerableSymbolOfRow;
+            return _iEnumerableSymbolOfRow = _iEnumerableSymbol!.Construct(_sepReaderRowSymbol!);
+        }
+    }
+
+    private INamedTypeSymbol? _iAsyncEnumerableSymbolOfRow;
+    private INamedTypeSymbol IAsyncEnumerableSymbolOfRow
+    {
+        get
+        {
+            if (_iAsyncEnumerableSymbolOfRow != null)
+                return _iAsyncEnumerableSymbolOfRow;
+            return _iAsyncEnumerableSymbolOfRow = _iAsyncEnumerableSymbol!.Construct(_sepReaderRowSymbol!);
+        }
+    }
+
     private static string reformatFieldName(string fieldName)
     {
+        if (fieldName == nameof(_sepReaderRowSymbol))
+        {
+            return "SepReader.Row";
+        }
         fieldName = fieldName.Remove(fieldName.Length - "Symbol".Length);
         fieldName = char.ToUpperInvariant(fieldName[1]) + fieldName.Substring(2);
         return fieldName;
@@ -43,10 +72,10 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
     {
         var results = new List<CsvMethodDefinition>();
 
-        List<FieldInfo> nullFields = [.. this.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance).Where(f => f.FieldType == typeof(INamedTypeSymbol) && f.GetValue(this) is null)];
+        List<FieldInfo> nullFields = [.. this.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance).Where(f => f.Name != nameof(_iEnumerableSymbolOfRow) && f.Name != nameof(_iAsyncEnumerableSymbolOfRow) && f.FieldType == typeof(INamedTypeSymbol) && f.GetValue(this) is null)];
         if (nullFields.Count != 0)
         {
-            string missingTypes = string.Join(", ", nullFields.Select(f => reformatFieldName(f.Name)));
+            string missingTypes = string.Join(", ", nullFields.Select(f => reformatFieldName(f.Name)).OrderBy(f => f));
             Diag(Diagnostic.Create(DiagnosticDescriptors.EssentialTypesNotFound, methods[0].GetLocation(), missingTypes));
             return results;
         }
@@ -68,7 +97,7 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                 continue;
             }
 
-            if (!ValidateMethodSignature(methodSymbol, methodSyntax, out bool isAsync))
+            if (!ValidateMethodSignature(methodSymbol, methodSyntax, out bool isAsync, out string? readerParameterName, out string? headersParameterName, out string? ctParameterName))
             {
                 continue;
             }
@@ -221,10 +250,9 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                 Diag(Diagnostic.Create(DiagnosticDescriptors.NoPropertiesFound, methodSyntax.Identifier.GetLocation(), itemTypeSymbol.Name));
             }
 
-            var readerParameterName = methodSymbol.Parameters[0].Name;
-            var cancellationTokenParameterName = methodSymbol.Parameters.Length > 1 ? methodSymbol.Parameters[1].Name : null;
+            var readerParameterType = (INamedTypeSymbol)methodSymbol.Parameters[0].Type;
 
-            results.Add(new CsvMethodDefinition(methodSymbol, containingClassSymbol, itemTypeSymbol, isAsync, readerParameterName, cancellationTokenParameterName, [.. propertiesToParse]));
+            results.Add(new CsvMethodDefinition(methodSymbol, containingClassSymbol, itemTypeSymbol, readerParameterType, isAsync, readerParameterName, headersParameterName, ctParameterName, [.. propertiesToParse]));
         }
         return results;
     }
@@ -240,9 +268,13 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
         return false;
     }
 
-    private bool ValidateMethodSignature(IMethodSymbol methodSymbol, MethodDeclarationSyntax methodSyntax, out bool isAsync)
+    private bool ValidateMethodSignature(IMethodSymbol methodSymbol, MethodDeclarationSyntax methodSyntax, out bool isAsync, [NotNullWhen(true)] out string? readerParameterName, out string? headersParameterName, out string? ctParameterName)
     {
         isAsync = false;
+        headersParameterName = null;
+        ctParameterName = null;
+        readerParameterName = null;
+
         bool isValid = true;
         if (!methodSymbol.IsPartialDefinition)
         {
@@ -271,23 +303,88 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
             isAsync = true;
         }
 
-        if (methodSymbol.Parameters.Length < 1 || methodSymbol.Parameters.Length > 2)
+        bool readerIsEnumerable = false; // true if IAsyncEnumerable or IEnumerable, false if SepReader
+
+        // TODO: all these diags should be more precise.
+        foreach (var parameter in methodSymbol.Parameters)
         {
-            Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidMethodParameters, methodSyntax.ParameterList.GetLocation()));
-            return false;
+            if (SymbolEqualityComparer.Default.Equals(parameter.Type, _cancellationTokenSymbol))
+            {
+                if (ctParameterName is not null)
+                {
+                    Diag(Diagnostic.Create(DiagnosticDescriptors.DuplicateCancellationTokenParameter, parameter.Locations[0]));
+                    isValid = false;
+                }
+                ctParameterName = parameter.Name;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(parameter.Type, _sepReaderHeaderSymbol))
+            {
+                if (headersParameterName is not null)
+                {
+                    Diag(Diagnostic.Create(DiagnosticDescriptors.DuplicateHeaderParameter, parameter.Locations[0]));
+                    isValid = false;
+                }
+                headersParameterName = parameter.Name;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(parameter.Type, _sepReaderSymbol))
+            {
+                if (readerParameterName is not null)
+                {
+                    Diag(Diagnostic.Create(DiagnosticDescriptors.DuplicateReaderParameter, parameter.Locations[0]));
+                    isValid = false;
+                }
+                readerParameterName = parameter.Name;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(parameter.Type, IEnumerableSymbolOfRow))
+            {
+                if (isAsync)
+                {
+                    Diag(Diagnostic.Create(DiagnosticDescriptors.UnexpectedIEnumerableParameter, parameter.Locations[0]));
+                    isValid = false;
+                }
+                if (readerParameterName is not null)
+                {
+                    Diag(Diagnostic.Create(DiagnosticDescriptors.DuplicateReaderParameter, parameter.Locations[0]));
+                    isValid = false;
+                }
+                readerIsEnumerable = true;
+                readerParameterName = parameter.Name;
+            }
+            else if (SymbolEqualityComparer.Default.Equals(parameter.Type, IAsyncEnumerableSymbolOfRow))
+            {
+                if (!isAsync)
+                {
+                    Diag(Diagnostic.Create(DiagnosticDescriptors.UnexpectedIAsyncEnumerableParameter, parameter.Locations[0]));
+                    isValid = false;
+                }
+                if (readerParameterName is not null)
+                {
+                    Diag(Diagnostic.Create(DiagnosticDescriptors.DuplicateReaderParameter, parameter.Locations[0]));
+                    isValid = false;
+                }
+                readerIsEnumerable = true;
+                readerParameterName = parameter.Name;
+            }
+            else
+            {
+                Diag(Diagnostic.Create(DiagnosticDescriptors.UnexpectedParameterType, parameter.Locations[0]));
+                isValid = false;
+            }
         }
 
-        if (!SymbolEqualityComparer.Default.Equals(methodSymbol.Parameters[0].Type, _sepReaderSymbol))
+        if (readerParameterName is null)
         {
-            Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidMethodParameters, methodSyntax.ParameterList.GetLocation()));
+            Diag(Diagnostic.Create(DiagnosticDescriptors.MissingReaderParameter, methodSyntax.ParameterList.GetLocation()));
             isValid = false;
         }
 
-        if (methodSymbol.Parameters.Length == 2 && !SymbolEqualityComparer.Default.Equals(methodSymbol.Parameters[1].Type, _cancellationTokenSymbol))
+        if (readerIsEnumerable && headersParameterName is null)
         {
-            Diag(Diagnostic.Create(DiagnosticDescriptors.InvalidMethodParameters, methodSyntax.ParameterList.GetLocation()));
+            Diag(Diagnostic.Create(DiagnosticDescriptors.MissingHeaderParameter, methodSyntax.ParameterList.GetLocation()));
             isValid = false;
         }
+
+
         return isValid;
 
     }

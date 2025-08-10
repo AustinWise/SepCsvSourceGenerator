@@ -8,7 +8,7 @@ namespace Test
 {
     public partial class MyRecord
     {
-        public static async partial global::System.Collections.Generic.IAsyncEnumerable<global::Test.MyRecord> ParseWhatHo(SepReader whatHoReader, [EnumeratorCancellation] global::System.Threading.CancellationToken deucedCancellationToken)
+        public static async partial System.Collections.Generic.IAsyncEnumerable<Test.MyRecord> ParseWhatHo(nietras.SeparatedValues.SepReader whatHoReader, [EnumeratorCancellation] System.Threading.CancellationToken deucedCancellationToken)
         {
             int NameNdx;
 

@@ -128,22 +128,9 @@ internal sealed class Emitter
         }
         modifiers.Add("partial");
 
-        string returnType = methodDef.IsAsync
-            ? $"global::System.Collections.Generic.IAsyncEnumerable<{itemTypeName}>"
-            : $"global::System.Collections.Generic.IEnumerable<{itemTypeName}>";
-
         var line = new StringBuilder();
-        line.Append(string.Join(" ", modifiers))
-                .Append($" {returnType} {methodDef.MethodSymbol.Name}(SepReader {methodDef.ReaderParameterName}");
-        if (methodDef.CancellationTokenParameterName is not null)
-        {
-            line.Append(", ");
-            if (methodDef.IsAsync)
-            {
-                line.Append("[EnumeratorCancellation] ");
-            }
-            line.Append($"global::System.Threading.CancellationToken {methodDef.CancellationTokenParameterName}");
-        }
+        line.Append(string.Join(" ", modifiers)).Append($" {methodDef.MethodSymbol.ReturnType} {methodDef.MethodSymbol.Name}(");
+        line.Append(string.Join(", ", methodDef.MethodSymbol.Parameters.Select(p => (methodDef.IsAsync && p.Name == methodDef.CancellationTokenParameterName ? "[EnumeratorCancellation] " : "") + $"{p.Type} {p.Name}")));
         line.Append(')');
         AppendLine(line.ToString());
         AppendLine("{");
@@ -159,7 +146,8 @@ internal sealed class Emitter
         // Get header indices
         foreach (var prop in methodDef.PropertiesToParse)
         {
-            var tryFindIndex = string.Join(" || ", prop.HeaderNames.Select(h => $"{methodDef.ReaderParameterName}.Header.TryIndexOf(\"{h}\", out {prop.Name}Ndx)"));
+            string headerName = methodDef.HeaderParameterName ?? $"{methodDef.ReaderParameterName}.Header";
+            var tryFindIndex = string.Join(" || ", prop.HeaderNames.Select(h => $"{headerName}.TryIndexOf(\"{h}\", out {prop.Name}Ndx)"));
             if (prop.HeaderNames.Length == 1)
             {
                 AppendLine($"if (!{tryFindIndex})");

@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 public partial class MyGlobalRecord
 {
-    public static partial global::System.Collections.Generic.IEnumerable<global::MyGlobalRecord> ParseRecords(SepReader reader, global::System.Threading.CancellationToken ct)
+    public static partial System.Collections.Generic.IEnumerable<MyGlobalRecord> ParseRecords(nietras.SeparatedValues.SepReader reader, System.Threading.CancellationToken ct)
     {
         int NameNdx;
         int UnrelatedPropertyNdx;

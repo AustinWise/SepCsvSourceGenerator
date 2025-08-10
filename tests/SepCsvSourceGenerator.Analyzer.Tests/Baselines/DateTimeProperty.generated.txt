@@ -8,7 +8,7 @@ namespace Test
 {
     public partial class MyRecord
     {
-        public static async partial global::System.Collections.Generic.IAsyncEnumerable<global::Test.MyRecord> ParseRecords(SepReader reader, [EnumeratorCancellation] global::System.Threading.CancellationToken ct)
+        public static async partial System.Collections.Generic.IAsyncEnumerable<Test.MyRecord> ParseRecords(nietras.SeparatedValues.SepReader reader, [EnumeratorCancellation] System.Threading.CancellationToken ct)
         {
             int DateNdx;
 

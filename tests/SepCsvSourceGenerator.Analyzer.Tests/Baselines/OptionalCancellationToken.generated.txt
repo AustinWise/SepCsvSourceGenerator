@@ -8,7 +8,7 @@ namespace Test
 {
     public partial class MyRecord
     {
-        public static async partial global::System.Collections.Generic.IAsyncEnumerable<global::Test.MyRecord> ParseWithNoCt(SepReader reader)
+        public static async partial System.Collections.Generic.IAsyncEnumerable<Test.MyRecord> ParseWithNoCt(nietras.SeparatedValues.SepReader reader)
         {
             int NameNdx;
 

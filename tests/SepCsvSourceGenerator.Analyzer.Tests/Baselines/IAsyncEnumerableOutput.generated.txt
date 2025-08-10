@@ -6,16 +6,20 @@ using System.Runtime.CompilerServices;
 
 public partial class MyGlobalRecord
 {
-    public static partial System.Collections.Generic.IEnumerable<MyGlobalRecord> ParseRecords(nietras.SeparatedValues.SepReader reader, System.Threading.CancellationToken ct)
+    public static async partial System.Collections.Generic.IAsyncEnumerable<MyGlobalRecord> ParseRecords(nietras.SeparatedValues.SepReaderHeader header, System.Collections.Generic.IAsyncEnumerable<nietras.SeparatedValues.SepReader.Row> reader, [EnumeratorCancellation] System.Threading.CancellationToken ct)
     {
         int NameNdx;
 
-        if (!reader.Header.TryIndexOf("Name", out NameNdx))
+        if (!header.TryIndexOf("Name", out NameNdx))
         {
             NameNdx = -1;
         }
 
-        foreach (SepReader.Row row in reader)
+        await foreach (SepReader.Row row in reader
+            #if NET10_0_OR_GREATER
+            .WithCancellation(ct).ConfigureAwait(false)
+            #endif
+        )
         {
             ct.ThrowIfCancellationRequested();
 
