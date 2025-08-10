@@ -93,7 +93,28 @@ The source generator also supports generating asynchronous parsing methods. To d
 public static partial IAsyncEnumerable<MyRecord> ParseAsync(SepReader reader, CancellationToken ct);
 ```
 
+### Passing IEnumerable instead of a SepReader
+
+Sometimes you may want to filter out some of the rows of the CSV file before attempting to
+deserialize them. For example, some banks include lines like "Pending Transactions" and
+"Posted Transactions" to indicate where pending and posted transitions start. To accomplish this,
+you can pass an `IEnumerable<SepReader.Row>` instead of a `SepReader`. You will also need to specify
+a `SepReaderHeader` parameter.
+
+```csharp
+[GenerateCsvParser]
+public static partial IEnumerable<MyRecord> Parse(SepReaderHeader header, IEnumerable<SepReader.Row> items);
+
+[GenerateCsvParser]
+public static partial IAsyncEnumerable<MyRecord> ParseAsync(SepReaderHeader header, IAsyncEnumerable<SepReader.Row> items, CancellationToken ct);
+```
+
 ## Changelog
+
+### 0.3.0
+
+* Support for parameter types to be in any order.
+* Support for `IEnumerable<SepReader.Row>` or `IAsyncEnumerable<SepReader.Row>` as a parameter instead of `SepReader`.
 
 ### 0.2.1
 
