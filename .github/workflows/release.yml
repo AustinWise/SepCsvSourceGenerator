@@ -6,7 +6,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions: {}
+    permissions:
+      id-token: write  # enable GitHub OIDC token issuance for this job
     timeout-minutes: 15
     steps:
     - name: Checkout
@@ -27,11 +28,10 @@ jobs:
       run: dotnet test --configuration Release /p:Version=${VERSION} --no-build
     - name: Pack
       run: dotnet pack --configuration Release /p:Version=${VERSION} --no-build --output .
+    - name: NuGet login
+      uses: NuGet/login@v1
+      id: login
+      with:
+        user: ${{ secrets.NUGET_USER }}
     - name: Push
-      run: dotnet nuget push AWise.SepCsvSourceGenerator.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${NUGET_API}
-      env:
-        # get a new API key here:
-        # https://www.nuget.org/account/apikeys
-        # and put it here:
-        # https://github.com/AustinWise/SepCsvSourceGenerator/settings/secrets/actions
-        NUGET_API: ${{ secrets.NUGET_API }}
+      run: dotnet nuget push AWise.SepCsvSourceGenerator.${VERSION}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
