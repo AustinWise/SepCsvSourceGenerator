@@ -6,4 +6,5 @@ internal enum CsvPropertyKind
     DateOrTime,
     String,
     Enum,
+    List,
 }

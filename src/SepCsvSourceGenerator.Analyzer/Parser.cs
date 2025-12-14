@@ -25,6 +25,7 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
     private readonly INamedTypeSymbol? _sepReaderHeaderSymbol = compilation.GetTypeByMetadataName("nietras.SeparatedValues.SepReaderHeader");
     private readonly INamedTypeSymbol? _iAsyncEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IAsyncEnumerable`1");
     private readonly INamedTypeSymbol? _iEnumerableSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.IEnumerable`1");
+    private readonly INamedTypeSymbol? _listSymbol = compilation.GetTypeByMetadataName("System.Collections.Generic.List`1");
     private readonly INamedTypeSymbol? _cancellationTokenSymbol = compilation.GetTypeByMetadataName("System.Threading.CancellationToken");
     private readonly INamedTypeSymbol? _dateTimeSymbol = compilation.GetSpecialType(SpecialType.System_DateTime);
     private readonly INamedTypeSymbol? _dateTimeOffsetSymbol = compilation.GetTypeByMetadataName("System.DateTimeOffset");
@@ -183,49 +184,78 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                     }
 
                     string? dateFormat = null;
+                    string? elementTypeName = null;
+                    CsvPropertyKind? elementKind = null;
+                    string? elementDateFormat = null;
+                    char listDelimiter = ',';
                     var kind = CsvPropertyKind.SpanParsable;
 
                     bool isNullableType = IsNullableType(propertySymbol.Type, out ITypeSymbol underlyingType);
 
-                    bool isDateOrTime = SymbolEqualityComparer.Default.Equals(underlyingType, _dateTimeSymbol) ||
-                                        SymbolEqualityComparer.Default.Equals(underlyingType, _dateTimeOffsetSymbol) ||
-                                        SymbolEqualityComparer.Default.Equals(underlyingType, _dateOnlySymbol) ||
-                                        SymbolEqualityComparer.Default.Equals(underlyingType, _timeOnlySymbol);
+                    // Check if this is a list type (array or List<T>)
+                    bool isListType = IsListType(underlyingType, out ITypeSymbol elementType);
 
-                    if (isDateOrTime)
+                    ITypeSymbol typeToAnalyze = isListType ? elementType : underlyingType;
+
+                    if (isListType)
                     {
-                        kind = CsvPropertyKind.DateOrTime;
-                        AttributeData? dateFormatAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
-                            SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvDateFormatAttributeSymbol));
-                        if (dateFormatAttr == null || dateFormatAttr.ConstructorArguments.Length == 0 ||
-                            string.IsNullOrWhiteSpace(dateFormatAttr.ConstructorArguments[0].Value as string))
+                        kind = CsvPropertyKind.List;
+                        elementTypeName = elementType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+                        // Determine the kind of the element type
+                        var (elemKind, elemDateFmt) = DetermineTypeKind(elementType, propertySymbol, true);
+                        
+                        if (elemKind == CsvPropertyKind.DateOrTime && elemDateFmt == null)
                         {
                             Diag(Diagnostic.Create(DiagnosticDescriptors.MissingDateFormatAttribute, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name));
                             continue;
                         }
-                        dateFormat = dateFormatAttr.ConstructorArguments[0].Value as string;
-                    }
-                    else if (underlyingType.BaseType != null && SymbolEqualityComparer.Default.Equals(underlyingType.BaseType, _enumSymbol))
-                    {
-                        kind = CsvPropertyKind.Enum;
-                    }
-                    else if (SymbolEqualityComparer.Default.Equals(underlyingType.OriginalDefinition, _stringSymbol))
-                    {
-                        kind = CsvPropertyKind.String;
-                    }
+                        
+                        elementKind = elemKind;
+                        elementDateFormat = elemDateFmt;
 
-                    if (kind == CsvPropertyKind.SpanParsable)
-                    {
-                        bool isSpanParsable = underlyingType.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, _iSpanParsableSymbol));
-                        if (!isSpanParsable && underlyingType is ITypeParameterSymbol typeParameter)
+                        // Validate that element type is parsable
+                        if (elemKind == CsvPropertyKind.SpanParsable)
                         {
-                            isSpanParsable = typeParameter.ConstraintTypes.SelectMany(t => t.AllInterfaces.Concat([t.OriginalDefinition as INamedTypeSymbol])).Any(i => SymbolEqualityComparer.Default.Equals(i?.OriginalDefinition, _iSpanParsableSymbol));
+                            bool isSpanParsable = elementType.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, _iSpanParsableSymbol));
+                            if (!isSpanParsable && elementType is ITypeParameterSymbol typeParameter)
+                            {
+                                isSpanParsable = typeParameter.ConstraintTypes.SelectMany(t => t.AllInterfaces.Concat([t.OriginalDefinition as INamedTypeSymbol])).Any(i => SymbolEqualityComparer.Default.Equals(i?.OriginalDefinition, _iSpanParsableSymbol));
+                            }
+
+                            if (!isSpanParsable)
+                            {
+                                Diag(Diagnostic.Create(DiagnosticDescriptors.PropertyNotParsable, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name, elementType.Name));
+                                continue;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Not a list type - handle as scalar
+                        var (scalarKind, scalarDateFmt) = DetermineTypeKind(typeToAnalyze, propertySymbol, true);
+                        kind = scalarKind;
+                        dateFormat = scalarDateFmt;
+
+                        if (kind == CsvPropertyKind.DateOrTime && dateFormat == null)
+                        {
+                            Diag(Diagnostic.Create(DiagnosticDescriptors.MissingDateFormatAttribute, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name));
+                            continue;
                         }
 
-                        if (!isSpanParsable)
+                        if (kind == CsvPropertyKind.SpanParsable)
                         {
-                            Diag(Diagnostic.Create(DiagnosticDescriptors.PropertyNotParsable, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name, underlyingType.Name));
-                            continue;
+                            bool isSpanParsable = typeToAnalyze.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, _iSpanParsableSymbol));
+                            if (!isSpanParsable && typeToAnalyze is ITypeParameterSymbol typeParameter)
+                            {
+                                isSpanParsable = typeParameter.ConstraintTypes.SelectMany(t => t.AllInterfaces.Concat([t.OriginalDefinition as INamedTypeSymbol])).Any(i => SymbolEqualityComparer.Default.Equals(i?.OriginalDefinition, _iSpanParsableSymbol));
+                            }
+
+                            if (!isSpanParsable)
+                            {
+                                Diag(Diagnostic.Create(DiagnosticDescriptors.PropertyNotParsable, propertySymbol.Locations.FirstOrDefault()!, propertySymbol.Name, typeToAnalyze.Name));
+                                continue;
+                            }
                         }
                     }
 
@@ -237,7 +267,11 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
                         dateFormat,
                         propertySymbol.IsRequired,
                         propertySymbol.SetMethod?.IsInitOnly ?? false,
-                        kind
+                        kind,
+                        elementTypeName,
+                        elementKind,
+                        elementDateFormat,
+                        listDelimiter
                     ));
                 }
                 currentType = currentType.BaseType;
@@ -266,6 +300,67 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
         }
         underlyingType = type;
         return false;
+    }
+
+    private bool IsListType(ITypeSymbol type, out ITypeSymbol elementType)
+    {
+        elementType = null!;
+        
+        // Check for arrays (e.g., string[], int[])
+        if (type is IArrayTypeSymbol arrayType)
+        {
+            elementType = arrayType.ElementType;
+            return true;
+        }
+        
+        // Check for List<T>
+        if (type is INamedTypeSymbol namedType && 
+            namedType.IsGenericType && 
+            SymbolEqualityComparer.Default.Equals(namedType.OriginalDefinition, _listSymbol))
+        {
+            elementType = namedType.TypeArguments[0];
+            return true;
+        }
+        
+        return false;
+    }
+
+    private (CsvPropertyKind kind, string? dateFormat) DetermineTypeKind(ITypeSymbol type, IPropertySymbol propertySymbol, bool allowDateFormat)
+    {
+        string? dateFormat = null;
+        var kind = CsvPropertyKind.SpanParsable;
+
+        bool isDateOrTime = SymbolEqualityComparer.Default.Equals(type, _dateTimeSymbol) ||
+                            SymbolEqualityComparer.Default.Equals(type, _dateTimeOffsetSymbol) ||
+                            SymbolEqualityComparer.Default.Equals(type, _dateOnlySymbol) ||
+                            SymbolEqualityComparer.Default.Equals(type, _timeOnlySymbol);
+
+        if (isDateOrTime)
+        {
+            kind = CsvPropertyKind.DateOrTime;
+            if (allowDateFormat)
+            {
+                AttributeData? dateFormatAttr = propertySymbol.GetAttributes().FirstOrDefault(ad =>
+                    SymbolEqualityComparer.Default.Equals(ad.AttributeClass, _csvDateFormatAttributeSymbol));
+                if (dateFormatAttr != null && dateFormatAttr.ConstructorArguments.Length > 0 &&
+                    !string.IsNullOrWhiteSpace(dateFormatAttr.ConstructorArguments[0].Value as string))
+                {
+                    dateFormat = dateFormatAttr.ConstructorArguments[0].Value as string;
+                }
+                // If date format not found, dateFormat remains null, and kind is DateOrTime
+                // The caller will check for this and emit a diagnostic
+            }
+        }
+        else if (type.BaseType != null && SymbolEqualityComparer.Default.Equals(type.BaseType, _enumSymbol))
+        {
+            kind = CsvPropertyKind.Enum;
+        }
+        else if (SymbolEqualityComparer.Default.Equals(type.OriginalDefinition, _stringSymbol))
+        {
+            kind = CsvPropertyKind.String;
+        }
+
+        return (kind, dateFormat);
     }
 
     private bool ValidateMethodSignature(IMethodSymbol methodSymbol, MethodDeclarationSyntax methodSyntax, out bool isAsync, [NotNullWhen(true)] out string? readerParameterName, out string? headersParameterName, out string? ctParameterName)

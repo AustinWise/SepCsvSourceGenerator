@@ -516,6 +516,58 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
             RunTestAsync(source, "MultipleHeaderNames.generated.txt");
         }
 
+        [Fact]
+        public void Emitter_GeneratesCorrectCode_ForStringArrayProperty()
+        {
+            var source = """
+                using System;
+                using System.Collections.Generic;
+                using System.Threading;
+                using AWise.SepCsvSourceGenerator;
+                using nietras.SeparatedValues;
+
+                namespace Test
+                {
+                    public partial class MyRecord
+                    {
+                        [CsvHeaderName("Tags")]
+                        public string[]? Tags { get; set; }
+
+                        [GenerateCsvParser]
+                        public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken ct);
+                    }
+                }
+
+                """;
+            RunTestAsync(source, "StringArrayProperty.generated.txt");
+        }
+
+        [Fact]
+        public void Emitter_GeneratesCorrectCode_ForIntListProperty()
+        {
+            var source = """
+                using System;
+                using System.Collections.Generic;
+                using System.Threading;
+                using AWise.SepCsvSourceGenerator;
+                using nietras.SeparatedValues;
+
+                namespace Test
+                {
+                    public partial class MyRecord
+                    {
+                        [CsvHeaderName("Numbers")]
+                        public List<int>? Numbers { get; set; }
+
+                        [GenerateCsvParser]
+                        public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken ct);
+                    }
+                }
+
+                """;
+            RunTestAsync(source, "IntListProperty.generated.txt");
+        }
+
         private static void RunTestAsync(string source, string baselineFileName)
         {
             source = "#nullable enable\n" + source;

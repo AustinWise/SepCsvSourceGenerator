@@ -86,6 +86,13 @@ internal sealed class Emitter
             GenerateMethod(methodDef);
         }
 
+        // Generate helper methods if any method uses list properties
+        bool needsListHelpers = methodsToGenerate.Any(m => m.PropertiesToParse.Any(p => p.Kind == CsvPropertyKind.List));
+        if (needsListHelpers)
+        {
+            GenerateListHelperMethods();
+        }
+
         // Close class and namespace braces
         currentClass = containingClassSymbol;
         while (currentClass != null)
@@ -102,6 +109,68 @@ internal sealed class Emitter
         }
 
         return _builder.ToString();
+    }
+
+    private void GenerateListHelperMethods()
+    {
+        AppendLine("");
+        AppendLine("private static T[] ParseListToArray<T>(global::System.ReadOnlySpan<char> span, char delimiter, global::System.Func<global::System.ReadOnlySpan<char>, T> parser)");
+        AppendLine("{");
+        IncreaseIndent();
+        AppendLine("if (span.IsEmpty)");
+        AppendLine("{");
+        IncreaseIndent();
+        AppendLine("return global::System.Array.Empty<T>();");
+        DecreaseIndent();
+        AppendLine("}");
+        AppendLine("");
+        AppendLine("var list = new global::System.Collections.Generic.List<T>();");
+        AppendLine("int start = 0;");
+        AppendLine("for (int i = 0; i < span.Length; i++)");
+        AppendLine("{");
+        IncreaseIndent();
+        AppendLine("if (span[i] == delimiter)");
+        AppendLine("{");
+        IncreaseIndent();
+        AppendLine("list.Add(parser(span.Slice(start, i - start)));");
+        AppendLine("start = i + 1;");
+        DecreaseIndent();
+        AppendLine("}");
+        DecreaseIndent();
+        AppendLine("}");
+        AppendLine("list.Add(parser(span.Slice(start)));");
+        AppendLine("return list.ToArray();");
+        DecreaseIndent();
+        AppendLine("}");
+        AppendLine("");
+        AppendLine("private static global::System.Collections.Generic.List<T> ParseListToList<T>(global::System.ReadOnlySpan<char> span, char delimiter, global::System.Func<global::System.ReadOnlySpan<char>, T> parser)");
+        AppendLine("{");
+        IncreaseIndent();
+        AppendLine("if (span.IsEmpty)");
+        AppendLine("{");
+        IncreaseIndent();
+        AppendLine("return new global::System.Collections.Generic.List<T>();");
+        DecreaseIndent();
+        AppendLine("}");
+        AppendLine("");
+        AppendLine("var list = new global::System.Collections.Generic.List<T>();");
+        AppendLine("int start = 0;");
+        AppendLine("for (int i = 0; i < span.Length; i++)");
+        AppendLine("{");
+        IncreaseIndent();
+        AppendLine("if (span[i] == delimiter)");
+        AppendLine("{");
+        IncreaseIndent();
+        AppendLine("list.Add(parser(span.Slice(start, i - start)));");
+        AppendLine("start = i + 1;");
+        DecreaseIndent();
+        AppendLine("}");
+        DecreaseIndent();
+        AppendLine("}");
+        AppendLine("list.Add(parser(span.Slice(start)));");
+        AppendLine("return list;");
+        DecreaseIndent();
+        AppendLine("}");
     }
 
     private void GenerateMethod(CsvMethodDefinition methodDef)
@@ -257,6 +326,12 @@ internal sealed class Emitter
     private static string GetParseExpression(CsvPropertyDefinition prop, string indexVarName)
     {
         string spanAccess = $"row[{indexVarName}].Span";
+        
+        if (prop.Kind == CsvPropertyKind.List)
+        {
+            return GetListParseExpression(prop, spanAccess);
+        }
+        
         return prop.Kind switch
         {
             CsvPropertyKind.DateOrTime => $"{prop.UnderlyingTypeName}.ParseExact({spanAccess}, \"{prop.DateFormat}\", CultureInfo.InvariantCulture)",
@@ -265,5 +340,36 @@ internal sealed class Emitter
             CsvPropertyKind.SpanParsable => $"{prop.UnderlyingTypeName}.Parse({spanAccess}, CultureInfo.InvariantCulture)",
             _ => throw new InvalidOperationException()
         };
+    }
+
+    private static string GetListParseExpression(CsvPropertyDefinition prop, string spanAccess)
+    {
+        Debug.Assert(prop.Kind == CsvPropertyKind.List);
+        Debug.Assert(prop.ElementKind != null);
+        Debug.Assert(prop.ElementTypeName != null);
+
+        string delimiter = prop.ListDelimiter == '\'' ? "\\'" : prop.ListDelimiter.ToString();
+        
+        // Generate element parsing expression
+        string elementParseExpr = prop.ElementKind switch
+        {
+            CsvPropertyKind.DateOrTime => $"{prop.ElementTypeName}.ParseExact(element, \"{prop.ElementDateFormat}\", CultureInfo.InvariantCulture)",
+            CsvPropertyKind.String => "element.ToString()",
+            CsvPropertyKind.Enum => $"global::System.Enum.Parse<{prop.ElementTypeName}>(element)",
+            CsvPropertyKind.SpanParsable => $"{prop.ElementTypeName}.Parse(element, CultureInfo.InvariantCulture)",
+            _ => throw new InvalidOperationException()
+        };
+
+        // Check if this is an array or List<T>
+        bool isArray = prop.UnderlyingTypeName.EndsWith("[]");
+        
+        if (isArray)
+        {
+            return $"ParseListToArray({spanAccess}, '{delimiter}', static element => {elementParseExpr})";
+        }
+        else
+        {
+            return $"ParseListToList({spanAccess}, '{delimiter}', static element => {elementParseExpr})";
+        }
     }
 }

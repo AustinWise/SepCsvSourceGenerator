@@ -8,4 +8,8 @@ internal record CsvPropertyDefinition(
     string? DateFormat,
     bool IsRequiredMember,
     bool IsInitOnly,
-    CsvPropertyKind Kind);
+    CsvPropertyKind Kind,
+    string? ElementTypeName = null, // For List types: the type of the elements
+    CsvPropertyKind? ElementKind = null, // For List types: the kind of the elements
+    string? ElementDateFormat = null, // For List types with date elements
+    char ListDelimiter = ','); // For List types: the delimiter to split elements

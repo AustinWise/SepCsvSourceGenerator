@@ -220,4 +220,64 @@ public partial class RunGeneratedParserTests
             Assert.Equal("Missing required column with any of the following names: 'a', 'b' for required property 'Value'.", ex.Message);
         }
     }
+
+    public partial class MyRecordWithStringArray
+    {
+        [CsvHeaderName("Tags")]
+        public string[]? Tags { get; set; }
+
+        [GenerateCsvParser(IncludeProperties = true)]
+        public static partial IEnumerable<MyRecordWithStringArray> Parse(SepReader reader);
+    }
+
+    [Fact]
+    public void ParseStringArray()
+    {
+        using var reader = Sep.Reader().FromText("Tags\ntag1,tag2,tag3\na,b");
+        var list = MyRecordWithStringArray.Parse(reader).ToList();
+        Assert.Equal(2, list.Count);
+
+        Assert.NotNull(list[0].Tags);
+        Assert.Equal(new[] { "tag1", "tag2", "tag3" }, list[0].Tags);
+
+        Assert.NotNull(list[1].Tags);
+        Assert.Equal(new[] { "a", "b" }, list[1].Tags);
+    }
+
+    [Fact]
+    public void ParseEmptyStringArray()
+    {
+        using var reader = Sep.Reader().FromText("Tags\n\na,b,c");
+        var list = MyRecordWithStringArray.Parse(reader).ToList();
+        Assert.Equal(2, list.Count);
+
+        Assert.NotNull(list[0].Tags);
+        Assert.Empty(list[0].Tags!);
+
+        Assert.NotNull(list[1].Tags);
+        Assert.Equal(new[] { "a", "b", "c" }, list[1].Tags);
+    }
+
+    public partial class MyRecordWithIntList
+    {
+        [CsvHeaderName("Numbers")]
+        public List<int>? Numbers { get; set; }
+
+        [GenerateCsvParser(IncludeProperties = true)]
+        public static partial IEnumerable<MyRecordWithIntList> Parse(SepReader reader);
+    }
+
+    [Fact]
+    public void ParseIntList()
+    {
+        using var reader = Sep.Reader().FromText("Numbers\n1,2,3\n10,20");
+        var list = MyRecordWithIntList.Parse(reader).ToList();
+        Assert.Equal(2, list.Count);
+
+        Assert.NotNull(list[0].Numbers);
+        Assert.Equal(new List<int> { 1, 2, 3 }, list[0].Numbers);
+
+        Assert.NotNull(list[1].Numbers);
+        Assert.Equal(new List<int> { 10, 20 }, list[1].Numbers);
+    }
 }
