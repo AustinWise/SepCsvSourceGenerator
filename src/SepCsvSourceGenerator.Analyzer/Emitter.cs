@@ -348,7 +348,16 @@ internal sealed class Emitter
         Debug.Assert(prop.ElementKind != null);
         Debug.Assert(prop.ElementTypeName != null);
 
-        string delimiter = prop.ListDelimiter == '\'' ? "\\'" : prop.ListDelimiter.ToString();
+        // Properly escape the delimiter for a C# character literal
+        string delimiterLiteral = prop.ListDelimiter switch
+        {
+            '\'' => @"\'",
+            '\\' => @"\\",
+            '\n' => @"\n",
+            '\r' => @"\r",
+            '\t' => @"\t",
+            _ => prop.ListDelimiter.ToString()
+        };
         
         // Generate element parsing expression
         string elementParseExpr = prop.ElementKind switch
@@ -365,11 +374,11 @@ internal sealed class Emitter
         
         if (isArray)
         {
-            return $"ParseListToArray({spanAccess}, '{delimiter}', static element => {elementParseExpr})";
+            return $"ParseListToArray({spanAccess}, '{delimiterLiteral}', static element => {elementParseExpr})";
         }
         else
         {
-            return $"ParseListToList({spanAccess}, '{delimiter}', static element => {elementParseExpr})";
+            return $"ParseListToList({spanAccess}, '{delimiterLiteral}', static element => {elementParseExpr})";
         }
     }
 }

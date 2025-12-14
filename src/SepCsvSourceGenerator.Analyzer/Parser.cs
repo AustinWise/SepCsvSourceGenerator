@@ -304,8 +304,6 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
 
     private bool IsListType(ITypeSymbol type, out ITypeSymbol elementType)
     {
-        elementType = null!;
-        
         // Check for arrays (e.g., string[], int[])
         if (type is IArrayTypeSymbol arrayType)
         {
@@ -322,6 +320,7 @@ internal sealed class Parser(Compilation compilation, Action<Diagnostic> reportD
             return true;
         }
         
+        elementType = null!;
         return false;
     }
 
