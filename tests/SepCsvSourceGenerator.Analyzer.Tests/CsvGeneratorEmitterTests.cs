@@ -568,6 +568,34 @@ namespace AWise.SepCsvSourceGenerator.Analyzer.Tests
             RunTestAsync(source, "IntListProperty.generated.txt");
         }
 
+        [Fact]
+        public void Emitter_GeneratesCorrectCode_ForEnumArrayProperty()
+        {
+            var source = """
+                using System;
+                using System.Collections.Generic;
+                using System.Threading;
+                using AWise.SepCsvSourceGenerator;
+                using nietras.SeparatedValues;
+
+                namespace Test
+                {
+                    public enum Status { Active, Inactive, Pending }
+                    
+                    public partial class MyRecord
+                    {
+                        [CsvHeaderName("Statuses")]
+                        public Status[]? Statuses { get; set; }
+
+                        [GenerateCsvParser]
+                        public static partial IAsyncEnumerable<MyRecord> ParseRecords(SepReader reader, CancellationToken ct);
+                    }
+                }
+
+                """;
+            RunTestAsync(source, "EnumArrayProperty.generated.txt");
+        }
+
         private static void RunTestAsync(string source, string baselineFileName)
         {
             source = "#nullable enable\n" + source;

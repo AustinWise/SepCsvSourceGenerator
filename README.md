@@ -58,6 +58,30 @@ exists in the CSV file.
 The only types that are supported for parsing are enums and types that implement
 [ISpanParsable](https://learn.microsoft.com/en-us/dotnet/api/system.ispanparsable-1).
 
+Arrays and `List<T>` are also supported. When a property is an array or `List<T>`, the CSV column value is split by commas
+and each element is parsed according to the element type. For example:
+
+```csharp
+public partial class MyRecord
+{
+    [CsvHeaderName("Tags")]
+    public string[]? Tags { get; set; }
+
+    [CsvHeaderName("Numbers")]
+    public List<int>? Numbers { get; set; }
+
+    [GenerateCsvParser(IncludeProperties = true)]
+    public static partial IEnumerable<MyRecord> Parse(SepReader reader);
+}
+```
+
+With CSV data like:
+```
+Tags,Numbers
+tag1,tag2,tag3,1,2,3
+a,b,10,20
+```
+
 `DateTime`, `DateTimeOffset`, `DateOnly`, and `TimeOnly` are given special treatment. They are parsed with
 their respective `ParseExact` methods using `CultureInfo.InvariantCulture`. Specify the date-time format using the `CsvDateFormat` attribute.
 

@@ -280,4 +280,27 @@ public partial class RunGeneratedParserTests
         Assert.NotNull(list[1].Numbers);
         Assert.Equal(new List<int> { 10, 20 }, list[1].Numbers);
     }
+
+    public partial class MyRecordWithEnumArray
+    {
+        [CsvHeaderName("Values")]
+        public MyEnum[]? Values { get; set; }
+
+        [GenerateCsvParser(IncludeProperties = true)]
+        public static partial IEnumerable<MyRecordWithEnumArray> Parse(SepReader reader);
+    }
+
+    [Fact]
+    public void ParseEnumArray()
+    {
+        using var reader = Sep.Reader().FromText("Values\nA,B,C\nB,A");
+        var list = MyRecordWithEnumArray.Parse(reader).ToList();
+        Assert.Equal(2, list.Count);
+
+        Assert.NotNull(list[0].Values);
+        Assert.Equal(new[] { MyEnum.A, MyEnum.B, MyEnum.C }, list[0].Values);
+
+        Assert.NotNull(list[1].Values);
+        Assert.Equal(new[] { MyEnum.B, MyEnum.A }, list[1].Values);
+    }
 }
