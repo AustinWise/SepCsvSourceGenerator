@@ -303,4 +303,40 @@ public partial class RunGeneratedParserTests
         Assert.NotNull(list[1].Values);
         Assert.Equal(new[] { MyEnum.B, MyEnum.A }, list[1].Values);
     }
+
+    public partial class MyRecordWithMultipleLists
+    {
+        [CsvHeaderName("Tags")]
+        public string[]? Tags { get; set; }
+
+        [CsvHeaderName("Numbers")]
+        public List<int>? Numbers { get; set; }
+
+        [GenerateCsvParser(IncludeProperties = true)]
+        public static partial IEnumerable<MyRecordWithMultipleLists> Parse(SepReader reader);
+    }
+
+    [Fact]
+    public void MultipleLists()
+    {
+        var options = new SepReaderOptions()
+        {
+            Unescape = true,
+        };
+        using var reader = options.FromText("""
+Tags,Numbers
+"tag1,tag2,tag3","1,2,3"
+"a,b","10,20"
+""");
+        var list = MyRecordWithMultipleLists.Parse(reader).ToList();
+        Assert.Equal(2, list.Count);
+
+        Assert.NotNull(list[0].Tags);
+        Assert.Equal(new[] { "tag1", "tag2", "tag3" }, list[0].Tags);
+        Assert.Equal(new[] { 1, 2, 3 }, list[0].Numbers);
+
+        Assert.NotNull(list[1].Tags);
+        Assert.Equal(new[] { "a", "b" }, list[1].Tags);
+        Assert.Equal(new[] { 10, 20 }, list[1].Numbers);
+    }
 }
